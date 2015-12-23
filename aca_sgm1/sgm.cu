@@ -441,7 +441,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  determine_costs <<< grid, block >>> (*left_image,*right_image,*costs,nx,ny,disp_range);
+  determine_costs <<< grid, block >>> (left_image,right_image,costs,nx,ny,disp_range);
 
   // not sure what to send
   //cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);

@@ -349,8 +349,32 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 
   free(accumulated_costs);
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+__global__ void iterate_direction_dirxpos(const int dirx, const int *left_image,
+                        const int* costs, int *accumulated_costs, 
+                        const int nx, const int ny, const int disp_range ){
 
-__global__ void intensity(int *imgIn, int *imgOut, int nx, int ny, int val){
+
+  /*
+const int WIDTH = nx;
+    const int HEIGHT = ny;
+
+      for ( int j = 0; j < HEIGHT; j++ ) {
+          for ( int i = 0; i < WIDTH; i++ ) {
+              if(i==0) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(0,j,d) += COSTS(0,j,d);
+                  }
+              }
+              else {
+                  evaluate_path( &ACCUMULATED_COSTS(i-dirx,j,0),
+                                 &COSTS(i,j,0),
+                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i-dirx,j)) ,
+                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range);
+              }
+          }
+      }
+  */
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
@@ -360,28 +384,118 @@ __global__ void intensity(int *imgIn, int *imgOut, int nx, int ny, int val){
   if(i < nx && j < ny){
     imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
   }
+}
+__global__ void iterate_direction_dirypos(const int diry, const int *left_image,
+                        const int* costs, int *accumulated_costs, 
+                        const int nx, const int ny, const int disp_range ){
 
-__global__ void create_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny)
-{
+  /*
+  const int WIDTH = nx;
+    const int HEIGHT = ny;
+
+      for ( int i = 0; i < WIDTH; i++ ) {
+          for ( int j = 0; j < HEIGHT; j++ ) {
+              if(j==0) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(i,0,d) += COSTS(i,0,d);
+                  }
+              }
+              else {
+                  evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
+                                 &COSTS(i,j,0),
+                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
+                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
+              }
+          }
+      }
+  */
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   int id = i + j * nx;
 
-  DISP_IMAGE(i,j) = 4 * find_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range );
- // if(i < nx && j < ny){
- //  imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
- // }
+  if(i < nx && j < ny){
+    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
+  }
+}
+__global__ void iterate_direction_dirxneg(const int dirx, const int *left_image,
+                        const int* costs, int *accumulated_costs, 
+                        const int nx, const int ny, const int disp_range ){
+
+  /*
+  const int WIDTH = nx;
+    const int HEIGHT = ny;
+
+      for ( int j = 0; j < HEIGHT; j++ ) {
+          for ( int i = WIDTH-1; i >= 0; i-- ) {
+              if(i==WIDTH-1) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(WIDTH-1,j,d) += COSTS(WIDTH-1,j,d);
+                  }
+              }
+              else {
+                  evaluate_path( &ACCUMULATED_COSTS(i-dirx,j,0),
+                                 &COSTS(i,j,0),
+                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i-dirx,j)),
+                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
+              }
+          }
+      }
+  */
+
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+
+  int id = i + j * nx;
+
+  if(i < nx && j < ny){
+    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
+  }
+}
+__global__ void iterate_direction_diryneg(const int diry, const int *left_image,
+                        const int* costs, int *accumulated_costs, 
+                        const int nx, const int ny, const int disp_range )
+{
+
+  /*
+   const int WIDTH = nx;
+    const int HEIGHT = ny;
+
+      for ( int i = 0; i < WIDTH; i++ ) {
+          for ( int j = HEIGHT-1; j >= 0; j-- ) {
+              if(j==HEIGHT-1) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(i,HEIGHT-1,d) += COSTS(i,HEIGHT-1,d);
+                  }
+              }
+              else {
+                  evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
+                           &COSTS(i,j,0),
+                           abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
+                           &ACCUMULATED_COSTS(i,j,0) , nx, ny, disp_range);
+             }
+         }
+      }
+  */
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+
+  int id = i + j * nx;
+
+  if(i < nx && j < ny){
+    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
+  }
 }
 // sgm code to run on the GPU
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void sgmDevice( const int *h_leftIm, const int *h_rightIm, 
                 int *h_dispImD, 
                 const int w, const int h, const int disp_range )
 {
     const int nx = w;
     const int ny = h;
- 
+ /*
   // Processing all costs. W*H*D. D= disp_range
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   if (costs == NULL) { 
@@ -421,8 +535,75 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
 
   free(accumulated_costs);
-}
 
+*/
+
+  
+  //do we really need in and out image?
+ // int imageSize = nx * ny * sizeof(int);  //image size in bytes
+ // cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
+ // cudaMalloc((void **)&devPtr_imgOut, imageSize);   //alocar memoria para o out
+
+  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  
+  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  
+  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   
+
+  //not sure what to send
+  //cudaMemcpy(devPtr_imgIn,h_leftIm,imageSize, cudaMemcpyHostToDevice);
+
+  int block_x = 32;
+  int block_y = 16; //32*16 = 512
+
+  int grid_x = ceil((float)nx / block_x);
+  int grid_y = ceil((float)ny / block_y);
+
+  dim3 block(block_x,block_y);
+  dim3 grid(grid_x, grid_y);
+
+
+//add for cycle for(dirx=-1; dirx<2; dirx++)
+//do we need both for cycles? or only one?  
+
+  if ( dirx > 0 ) {
+      // LEFT MOST EDGE
+      // Process every pixel along this edge
+      iterate_direction_dirxpos  <<< grid, block >>>  (dirx,h_leftIm,costs,dir_accumulated_costs, nx, ny, disp_range);
+    } 
+    else if ( diry > 0 ) {
+      // TOP MOST EDGE
+      // Process every pixel along this edge only if dirx ==
+      // 0. Otherwise skip the top left most pixel
+      iterate_direction_dirypos  <<< grid, block >>>  (diry,h_leftIm,costs,dir_accumulated_costs, nx, ny, disp_range);
+    } 
+    else if ( dirx < 0 ) {
+      // RIGHT MOST EDGE
+      // Process every pixel along this edge only if diry ==
+      // 0. Otherwise skip the top right most pixel
+      iterate_direction_dirxneg  <<< grid, block >>>  (dirx,h_leftIm,costs,dir_accumulated_costs, nx, ny, disp_range);
+    } 
+    else if ( diry < 0 ) {
+      // BOTTOM MOST EDGE
+      // Process every pixel along this edge only if dirx ==
+      // 0. Otherwise skip the bottom left and bottom right pixel
+      iterate_direction_diryneg <<< grid, block >>> (diry,h_leftIm,costs,dir_accumulated_costs, nx, ny, disp_range);
+    }
+
+
+  // not sure what to send
+  //cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);
+  
+  cudaFree(devPtr_imgIn);
+  cudaFree(devPtr_imgOut);
+
+  cudaFree(costs);    
+  cudaFree(accumulated_costs); 
+  cudaFree(dir_accumulated_costs);
+
+
+
+
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // print command line format
 void usage(char *command) 
 {
