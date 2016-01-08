@@ -375,8 +375,8 @@ __global__ void determine_costs(const int *left_image, const int *right_image, i
     // Macros inside kernel? What do we need to change?
    // COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
    //no macro alternative (safer?)
-      costs[(i)*disp_range+(j)*nx*disp_range+(d)] = abs( left_image[(i) + (j)*ns] - right_image[(i-d)+(j)*nx] );
-
+    //  costs[(i)*disp_range+(j)*nx*disp_range+(d)] = abs( left_image[(i) + (j)*ns] - right_image[(i-d)+(j)*nx] );
+    COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
   }
 
 
