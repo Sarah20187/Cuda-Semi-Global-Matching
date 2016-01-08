@@ -435,8 +435,8 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
 
   //do we really need in and out image?
 
-  const int *left_image;
-  const int *right_image;
+  int *left_image;
+  int *right_image;
   int *costs;
 
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
