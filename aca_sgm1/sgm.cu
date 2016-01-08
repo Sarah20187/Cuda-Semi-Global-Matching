@@ -434,6 +434,10 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 int imageSize = nx * ny * sizeof(int);  //image size in bytes
 
   //do we really need in and out image?
+
+  int *left_image; 
+  int *right_image;
+
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
   cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
 
