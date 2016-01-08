@@ -435,13 +435,14 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
 
   //do we really need in and out image?
 
-  int *left_image; 
-  int *right_image;
+  const int *left_image;
+  const int *right_image;
+  int *costs;
 
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
   cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
 
-  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));
+  cudaMalloc((void **)&costs, nx*ny*disp_range*sizeof(int));
 //  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
 //  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //dont need this for this kernel
 
