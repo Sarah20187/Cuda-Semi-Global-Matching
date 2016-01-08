@@ -353,7 +353,7 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 //////////////////////////////////////////////////////////////////////////////////
 
 __global__ void determine_costs(const int *left_image, const int *right_image, int *costs,
-                      const int disp_range)
+                      const int disp_range,const int nx)
 {
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
@@ -456,7 +456,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  determine_costs <<< grid, block >>> (left_image,right_image,costs,disp_range);
+  determine_costs <<< grid, block >>> (left_image,right_image,costs,disp_range,nx);
 
   // not sure what to send
   cudaMemcpy(h_dispImD, costs, nx*ny*disp_range,sizeof(int), cudaMemcpyDeviceToHost);
