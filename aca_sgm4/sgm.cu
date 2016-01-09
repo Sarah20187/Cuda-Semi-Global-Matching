@@ -361,9 +361,25 @@ __global__ void intensity(int *imgIn, int *imgOut, int nx, int ny, int val){
     imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
   }
 */
+
+
+
+__device__ int find_min_index( const int *v, const int disp_range ) 
+{
+    int min = std::numeric_limits<int>::max();
+    int minind = -1;
+    for (int d=0; d < disp_range; d++) {
+         if(v[d]<min) {
+              min = v[d];
+              minind = d;
+         }
+    }
+    return minind;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void create_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny)
+__global__ void create_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range)
 {
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
@@ -372,7 +388,7 @@ __global__ void create_disparity_view(const int *accumulated_costs, int * disp_i
   int id = i + j * nx;
 
   //can we use macros like this ? 
-  DISP_IMAGE(i,j) = 4 * find_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range );
+  disp_image[(i)+(j)*nx] = 4 * find_min_index( accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], disp_range );
  // if(i < nx && j < ny){
  //  imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
  // }
@@ -418,15 +434,19 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int imageSize = nx * ny * sizeof(int);  //image size in bytes
 
   //do we really need in and out image?
-  cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
+/* cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
   cudaMalloc((void **)&devPtr_imgOut, imageSize);   //alocar memoria para o out
-
+*/
 //  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
-  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //check this line
-  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //check this line
+  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  //check this line
+//  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //check this line
+ 
+
+//tenho que passar o disp_range e accumulated_costs
 
   //not sure what to send
-  //cudaMemcpy(devPtr_imgIn,h_leftIm,imageSize, cudaMemcpyHostToDevice);
+  
+  cudaMemcpy(accumulated_costs,costs,imageSize, cudaMemcpyHostToDevice);
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -437,10 +457,10 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  create_disparity_view <<< grid, block >>> (accumulated_costs,disp_image,nx,ny);
+  create_disparity_view <<< grid, block >>> (accumulated_costs,disp_image,nx,ny, disp_range);
 
   // not sure what to send
-  //cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
   
   cudaFree(devPtr_imgIn);
   cudaFree(devPtr_imgOut);
