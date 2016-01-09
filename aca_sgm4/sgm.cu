@@ -349,24 +349,11 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 
   free(accumulated_costs);
 }
-/*
-__global__ void intensity(int *imgIn, int *imgOut, int nx, int ny, int val){
-
-  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
-  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
-
-  int id = i + j * nx;
-
-  if(i < nx && j < ny){
-    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
-  }
-*/
 
 
-
-__device__ int find_min_index( const int *v, const int disp_range ) 
+__device__ int find_min_index( const int *v, const int disp_range, int min ) 
 {
-    int min = std::numeric_limits<int>::max();
+   
     int minind = -1;
     for (int d=0; d < disp_range; d++) {
          if(v[d]<min) {
@@ -379,19 +366,15 @@ __device__ int find_min_index( const int *v, const int disp_range )
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void create_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range)
+__global__ void create_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range, int min)
 {
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
-  int id = i + j * nx;
 
-  //can we use macros like this ? 
-  disp_image[(i)+(j)*nx] = 4 * find_min_index( accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], disp_range );
- // if(i < nx && j < ny){
- //  imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
- // }
+  disp_image[(i)+(j)*nx] = 4 * find_min_index( accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], disp_range, min );
+
 }
 
 
@@ -432,13 +415,15 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   
   int imageSize = nx * ny * sizeof(int);  //image size in bytes
+  int min = std::numeric_limits<int>::max(); // min for __device__ find function
 
   //do we really need in and out image?
 /* cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
   cudaMalloc((void **)&devPtr_imgOut, imageSize);   //alocar memoria para o out
 */
+  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
 //  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
-  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  //check this line
+  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //check this line
 //  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //check this line
  
 
@@ -457,7 +442,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  create_disparity_view <<< grid, block >>> (accumulated_costs,disp_image,nx,ny, disp_range);
+  create_disparity_view <<< grid, block >>> (accumulated_costs,disp_image,nx,ny, disp_range, min);
 
   // not sure what to send
   cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
