@@ -350,142 +350,176 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
   free(accumulated_costs);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+__device__ void evaluate_path(const int *prior, const int *local,
+                   int path_intensity_gradient, int *curr_cost , 
+                   const int nx, const int ny, const int disp_range) 
+{
+  memcpy(curr_cost, local, sizeof(int)*disp_range);
+
+  for ( int d = 0; d < disp_range; d++ ) {
+    int e_smooth = std::numeric_limits<int>::max();
+    for ( int d_p = 0; d_p < disp_range; d_p++ ) {
+      if ( d_p - d == 0 ) {
+        // No penality
+        e_smooth = MMIN(e_smooth,prior[d_p]);
+      } else if ( abs(d_p - d) == 1 ) {
+        // Small penality
+        e_smooth = MMIN(e_smooth,prior[d_p]+PENALTY1);
+      } else {
+        // Large penality
+        e_smooth =
+          MMIN(e_smooth,prior[d_p] +
+                   MMAX(PENALTY1,
+                            path_intensity_gradient ? PENALTY2/path_intensity_gradient : PENALTY2));
+      }
+    }
+    curr_cost[d] += e_smooth;
+  }
+
+  int min = std::numeric_limits<int>::max();
+  for ( int d = 0; d < disp_range; d++ ) {
+        if (prior[d]<min) min=prior[d];
+  }
+  for ( int d = 0; d < disp_range; d++ ) {
+        curr_cost[d]-=min;
+  }
+}
+
+
+
 __global__ void iterate_direction_dirxpos(const int dirx, const int *left_image,
                         const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ){
+                        const int nx, const int ny, const int disp_range )
+{
 
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   /*
 const int WIDTH = nx;
     const int HEIGHT = ny;
 
       for ( int j = 0; j < HEIGHT; j++ ) {
-          for ( int i = 0; i < WIDTH; i++ ) {
+          for ( int i = 0; i < WIDTH; i++ ) {*/
               if(i==0) {
                   for ( int d = 0; d < disp_range; d++ ) {
-                      ACCUMULATED_COSTS(0,j,d) += COSTS(0,j,d);
+                      accumulated_costs[(0)*disp_range+(j)*nx*disp_range+(d)] += costs[(0)*disp_range+(j)*nx*disp_range+(d)];
                   }
               }
               else {
-                  evaluate_path( &ACCUMULATED_COSTS(i-dirx,j,0),
-                                 &COSTS(i,j,0),
-                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i-dirx,j)) ,
-                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range);
-              }
+                  evaluate_path( accumulated_costs[(i-dirx)*disp_range+(j)*nx*disp_range+(0)],
+                                 costs[(i)*disp_range+(j)*nx*disp_range+(0)],
+                                 abs(left_image[(i)+(j)*nx]-left_image[(i-dirx)+(j)*nx]) ,
+                                 accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], nx, ny, disp_range);
+              }/*
           }
       }
   */
 
-  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
-  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+ 
+ // int id = i + j * nx;
 
-  int id = i + j * nx;
 
-  if(i < nx && j < ny){
-    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
-  }
 }
 __global__ void iterate_direction_dirypos(const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range ){
+
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+
 
   /*
   const int WIDTH = nx;
     const int HEIGHT = ny;
 
       for ( int i = 0; i < WIDTH; i++ ) {
-          for ( int j = 0; j < HEIGHT; j++ ) {
+          for ( int j = 0; j < HEIGHT; j++ ) {*/
               if(j==0) {
                   for ( int d = 0; d < disp_range; d++ ) {
-                      ACCUMULATED_COSTS(i,0,d) += COSTS(i,0,d);
+                      accumulated_costs[(i)*disp_range+(0)*nx*disp_range+(d)] += costs[(i)*disp_range+(0)*nx*disp_range+(d)];
                   }
               }
               else {
-                  evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
-                                 &COSTS(i,j,0),
-                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
-                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
-              }
+                  evaluate_path( accumulated_costs[(i)*disp_range+(j-diry)*nx*disp_range+(0)],
+                                 costs[(i)*disp_range+(j)*nx*disp_range+(0)],
+                                 abs(left_image[(i)+(j)*nx]-left_image[(i)+(j-diry)*nx],
+                                 accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], nx, ny, disp_range );
+              }/*   
           }
       }
   */
 
-  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
-  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+  
+ // int id = i + j * nx;
 
-  int id = i + j * nx;
-
-  if(i < nx && j < ny){
-    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
-  }
 }
 __global__ void iterate_direction_dirxneg(const int dirx, const int *left_image,
                         const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ){
+                        const int nx, const int ny, const int disp_range )
+{
+
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   /*
   const int WIDTH = nx;
     const int HEIGHT = ny;
 
       for ( int j = 0; j < HEIGHT; j++ ) {
-          for ( int i = WIDTH-1; i >= 0; i-- ) {
+          for ( int i = WIDTH-1; i >= 0; i-- ) {*/      
               if(i==WIDTH-1) {
                   for ( int d = 0; d < disp_range; d++ ) {
-                      ACCUMULATED_COSTS(WIDTH-1,j,d) += COSTS(WIDTH-1,j,d);
+                      accumulated_costs[(i)*disp_range+(WIDTH-1)*nx*disp_range+(d)] += costs[(WIDTH-1)*disp_range+(j)*nx*disp_range+(d)];
                   }
               }
               else {
-                  evaluate_path( &ACCUMULATED_COSTS(i-dirx,j,0),
-                                 &COSTS(i,j,0),
-                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i-dirx,j)),
-                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
+                  evaluate_path( accumulated_costs[(i-dirx)*disp_range+(j)*nx*disp_range+(0)],
+                                 costs[(i)*disp_range+(j)*nx*disp_range+(0)],
+                                 abs(left_image[(i)+(j)*nx]-left_image[(i-dirx)+(j)*nx]),
+                                  accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], nx, ny, disp_range );
               }
-          }
+          /*}
       }
   */
 
-  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
-  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+//  int id = i + j * nx;
 
-  int id = i + j * nx;
-
-  if(i < nx && j < ny){
-    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
-  }
+  
 }
 __global__ void iterate_direction_diryneg(const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range )
 {
 
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+
   /*
    const int WIDTH = nx;
     const int HEIGHT = ny;
 
       for ( int i = 0; i < WIDTH; i++ ) {
-          for ( int j = HEIGHT-1; j >= 0; j-- ) {
+          for ( int j = HEIGHT-1; j >= 0; j-- ) {*/
               if(j==HEIGHT-1) {
-                  for ( int d = 0; d < disp_range; d++ ) {
-                      ACCUMULATED_COSTS(i,HEIGHT-1,d) += COSTS(i,HEIGHT-1,d);
+                  for ( int d = 0; d < disp_range; d++ ) { 
+                      accumulated_costs[(i)*disp_range+(HEIGHT-1)*nx*disp_range+(d)] += costs[(i)*disp_range+(HEIGHT-1)*nx*disp_range+(d)];
                   }
               }
               else {
-                  evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
-                           &COSTS(i,j,0),
-                           abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
-                           &ACCUMULATED_COSTS(i,j,0) , nx, ny, disp_range);
+                  evaluate_path( accumulated_costs[(i)*disp_range+(j-diry)*nx*disp_range+(0)],
+                           costs[(i)*disp_range+(j)*nx*disp_range+(0)],
+                           abs(left_image[(i)+(j)*nx])-left_image[(i)+(j-diry)*nx],
+                           accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)] , nx, ny, disp_range);
              }
-         }
-      }
-  */
-  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
-  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+         /*}
+      }*/
+  
+  
 
-  int id = i + j * nx;
+//  int id = i + j * nx;
 
-  if(i < nx && j < ny){
-    imgOut[id] = imgOut[id] + val > 255 ? 255 : imgIn[id] + val;    //check if inside boundaries
-  }
+ 
 }
 // sgm code to run on the GPU
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -495,6 +529,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 {
     const int nx = w;
     const int ny = h;
+    int imageSize = nx * ny * sizeof(int);
  /*
   // Processing all costs. W*H*D. D= disp_range
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
@@ -543,13 +578,24 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
  // int imageSize = nx * ny * sizeof(int);  //image size in bytes
  // cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
  // cudaMalloc((void **)&devPtr_imgOut, imageSize);   //alocar memoria para o out
+  int cost_size = nx*ny*disp_range*sizeof(int);
+  int *pcosts = (int *) calloc(nx*ny*disp_range,sizeof(int));
+  int *a_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
+  int *dir_a_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
 
+
+  int *left_image;
+  cudaMalloc((void **)&left_image, imageSize);
   cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  
   cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  
   cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   
 
   //not sure what to send
-  //cudaMemcpy(devPtr_imgIn,h_leftIm,imageSize, cudaMemcpyHostToDevice);
+  cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
+  //cudaMemcpy(costs,pcosts,cost_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(accumulated_costs,a_costs,cost_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(dir_accumulated_costs,dir_a_costs,cost_size, cudaMemcpyHostToDevice);
+  
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -591,15 +637,17 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   // not sure what to send
   //cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);
-  
-  cudaFree(devPtr_imgIn);
-  cudaFree(devPtr_imgOut);
+  cudaMemcpy(h_dispImD, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  //maybe like this?
+  //cudaMemcpy(pcosts, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
+  cudaFree(left_image);
+  
   cudaFree(costs);    
   cudaFree(accumulated_costs); 
   cudaFree(dir_accumulated_costs);
 
-
+ 
 
 
 }

@@ -379,6 +379,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 {
     const int nx = w;
     const int ny = h;
+    int imageSize = nx * ny * sizeof(int);
 
   cudaMalloc((void **)&devPtr_imgIn, imageSize);
   cudaMalloc((void **)&devPtr_imgOut, imageSize);
