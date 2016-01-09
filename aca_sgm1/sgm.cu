@@ -360,7 +360,7 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   //int id = i + j * nx;
-std::fill(costs, costs+nx*ny*disp_range, 255u);
+
 
 /*#define COSTS(i,j,d)              costs[(i)*disp_range+(j)*nx*disp_range+(d)]
 #define ACCUMULATED_COSTS(i,j,d)  accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(d)]
@@ -375,8 +375,8 @@ std::fill(costs, costs+nx*ny*disp_range, 255u);
     // Macros inside kernel? What do we need to change?
    // COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
    //no macro alternative (safer?)
-    //  costs[(i)*disp_range+(j)*nx*disp_range+(d)] = abs( left_image[(i) + (j)*ns] - right_image[(i-d)+(j)*nx] );
-    COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
+      costs[(i)*disp_range+(j)*nx*disp_range+(d)] = abs( left_image[(i) + (j)*ns] - right_image[(i-d)+(j)*nx] );
+  //  COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
   }
 
 
@@ -460,6 +460,8 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
 
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
+
+  std::fill(costs, costs+nx*ny*disp_range, 255u);
 
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
