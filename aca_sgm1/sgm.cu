@@ -464,10 +464,10 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   determine_costs <<< grid, block >>> (left_image,right_image,costs,disp_range,nx);
 
   // not sure what to send
-  cudaMemcpy(h_dispImD, costs, nx*ny*disp_range,sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_dispImD, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
-  cudaFree(devPtr_imgIn);
-  cudaFree(devPtr_imgOut);
+  cudaFree(left_image);
+  cudaFree(right_image);
 
   cudaFree(costs);
 //  cudaFree(accumulated_costs); //dont need this for this kernel
