@@ -353,20 +353,20 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 //////////////////////////////////////////////////////////////////////////////////
 
 __global__ void determine_costs(const int *left_image, const int *right_image, int *costs,
-                      const int disp_range,const int nx)
+                      const int disp_range,const int nx, const int ny)
 {
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   //int id = i + j * nx;
+std::fill(costs, costs+nx*ny*disp_range, 255u);
 
-
-#define COSTS(i,j,d)              costs[(i)*disp_range+(j)*nx*disp_range+(d)]
+/*#define COSTS(i,j,d)              costs[(i)*disp_range+(j)*nx*disp_range+(d)]
 #define ACCUMULATED_COSTS(i,j,d)  accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(d)]
 #define LEFT_IMAGE(i,j)           left_image[(i)+(j)*nx]
 #define RIGHT_IMAGE(i,j)          right_image[(i)+(j)*nx]
-#define DISP_IMAGE(i,j)           disp_image[(i)+(j)*nx]
+#define DISP_IMAGE(i,j)           disp_image[(i)+(j)*nx]*/
 
 
 
@@ -461,7 +461,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  determine_costs <<< grid, block >>> (left_image,right_image,costs,disp_range,nx);
+  determine_costs <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
   // not sure what to send
   cudaMemcpy(h_dispImD, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
