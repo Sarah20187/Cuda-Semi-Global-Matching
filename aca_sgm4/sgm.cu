@@ -462,12 +462,12 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   // not sure what to send
   cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
   
-  cudaFree(devPtr_imgIn);
-  cudaFree(devPtr_imgOut);
+//  cudaFree(devPtr_imgIn);
+ // cudaFree(devPtr_imgOut);
 
 //  cudaFree(costs);    //not sure if costs is needed
   cudaFree(accumulated_costs);
-  cudaFree(dir_accumulated_costs);
+ // cudaFree(dir_accumulated_costs);
   
 }
 ////////////////////////////////////////////////////////////////////////////////////////
