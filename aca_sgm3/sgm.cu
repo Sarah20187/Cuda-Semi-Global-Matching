@@ -379,47 +379,6 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 {
     const int nx = w;
     const int ny = h;
- /*
-  // Processing all costs. W*H*D. D= disp_range
-  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (costs == NULL) { 
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }
-
-  determine_costs(h_leftIm, h_rightIm, costs, nx, ny, disp_range);
-
-  int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) { 
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }
-
-  int dirx=0,diry=0;
-  for(dirx=-1; dirx<2; dirx++) {
-      if(dirx==0 && diry==0) continue;
-      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
-      iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
-      inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
-  }
-  dirx=0;
-  for(diry=-1; diry<2; diry++) {
-      if(dirx==0 && diry==0) continue;
-      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
-      iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
-      inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
-  }
-
-  free(costs);
-  free(dir_accumulated_costs);
-
-  create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
-
-  free(accumulated_costs);
-*/
 
   cudaMalloc((void **)&devPtr_imgIn, imageSize);
   cudaMalloc((void **)&devPtr_imgOut, imageSize);
