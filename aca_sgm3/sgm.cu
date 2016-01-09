@@ -350,9 +350,10 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
   free(accumulated_costs);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-__global__ void inplace_sum_views(int * im1, const int * im2, const int nx, const int ny, const int disp_range){
+__global__ void inplace_sum_views(int * im1, const int * im2, 
+                        const int nx, const int ny, const int disp_range ){
 
-/* 
+
     int *im1_init = im1;
     while ( im1 != (im1_init + (nx*ny*disp_range)) ) {
       *im1 += *im2;
@@ -360,13 +361,13 @@ __global__ void inplace_sum_views(int * im1, const int * im2, const int nx, cons
       im2++;
     }
 
-*/
 
+/*
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   int id = i + j * nx;
-
+*/
 
 }
 
@@ -420,11 +421,10 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   free(accumulated_costs);
 */
 
-  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //check this line 
-  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //check this line
-
+  cudaMalloc((void **)&devPtr_imgIn, imageSize);
+  cudaMalloc((void **)&devPtr_imgOut, imageSize);
   //not sure what to send
-  //cudaMemcpy(devPtr_imgIn,h_leftIm,imageSize, cudaMemcpyHostToDevice);
+  cudaMemcpy(devPtr_imgIn,h_leftIm,imageSize, cudaMemcpyHostToDevice);
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -435,13 +435,13 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  inplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+  inplace_sum_views <<< grid, block >>> (devPtr_imgOut, devPtr_imgIn, nx, ny, disp_range);
 
   // not sure what to send
-  //cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);
    
-  cudaFree(accumulated_costs); 
-  cudaFree(dir_accumulated_costs); 
+  cudaFree(devPtr_imgIn); 
+  cudaFree(devPtr_imgOut); 
 
 
 }
