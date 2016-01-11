@@ -222,6 +222,7 @@ void iterate_direction( const int dirx, const int diry, const int *left_image,
 }
 
 // ADD two cost images 
+
 void inplace_sum_views( int * im1, const int * im2, 
                         const int nx, const int ny, const int disp_range ) 
 {
@@ -350,7 +351,7 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
   free(accumulated_costs);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-__global__ void inplace_sum_views(int * im1, const int * im2, 
+__global__ void dinplace_sum_views(int * im1, const int * im2, 
                         const int nx, const int ny, const int disp_range ){
 
 
@@ -424,16 +425,16 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
-      inplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+      dinplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
   dirx=0;
   for(diry=-1; diry<2; diry++) {
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
-      inplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+      dinplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
-  
+
     // inside cycle?
 
   cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
@@ -441,7 +442,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   free(costs);
   free(dir_accumulated_costs);
 
-  create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
+  create_disparity_view( accumulated_costs, h_dispImD, nx, ny, disp_range );
 
   free(accumulated_costs);
     

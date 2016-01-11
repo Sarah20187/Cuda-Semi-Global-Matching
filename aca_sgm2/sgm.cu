@@ -353,7 +353,7 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 
 
 
-__device__ void evaluate_path(const int *prior, const int *local,
+__device__ void devaluate_path(const int *prior, const int *local,
                    int path_intensity_gradient, int *curr_cost , 
                    const int nx, const int ny, const int disp_range) 
 {
@@ -390,7 +390,7 @@ __device__ void evaluate_path(const int *prior, const int *local,
 
 
 
-__device__ void iterate_direction_dirxpos(const int dirx, const int *left_image,
+__device__ void diterate_direction_dirxpos(const int dirx, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range )
 {
@@ -410,7 +410,7 @@ const int WIDTH = nx;
                   }
               }
               else {
-                  evaluate_path( accumulated_costs[(i-dirx)*disp_range+(j)*nx*disp_range+(0)],
+                  devaluate_path( accumulated_costs[(i-dirx)*disp_range+(j)*nx*disp_range+(0)],
                                  costs[(i)*disp_range+(j)*nx*disp_range+(0)],
                                  abs(left_image[(i)+(j)*nx]-left_image[(i-dirx)+(j)*nx]) ,
                                  accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], nx, ny, disp_range);
@@ -424,7 +424,7 @@ const int WIDTH = nx;
 
 
 }
-__device__ void iterate_direction_dirypos(const int diry, const int *left_image,
+__device__ void diterate_direction_dirypos(const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range ){
 
@@ -444,7 +444,7 @@ __device__ void iterate_direction_dirypos(const int diry, const int *left_image,
                   }
               }
               else {
-                  evaluate_path( accumulated_costs[(i)*disp_range+(j-diry)*nx*disp_range+(0)],
+                  devaluate_path( accumulated_costs[(i)*disp_range+(j-diry)*nx*disp_range+(0)],
                                  costs[(i)*disp_range+(j)*nx*disp_range+(0)],
                                  abs(left_image[(i)+(j)*nx]-left_image[(i)+(j-diry)*nx],
                                  accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], nx, ny, disp_range );
@@ -457,7 +457,7 @@ __device__ void iterate_direction_dirypos(const int diry, const int *left_image,
  // int id = i + j * nx;
 
 }
-__device__ void iterate_direction_dirxneg(const int dirx, const int *left_image,
+__device__ void diterate_direction_dirxneg(const int dirx, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range )
 {
@@ -477,7 +477,7 @@ __device__ void iterate_direction_dirxneg(const int dirx, const int *left_image,
                   }
               }
               else {
-                  evaluate_path( accumulated_costs[(i-dirx)*disp_range+(j)*nx*disp_range+(0)],
+                  devaluate_path( accumulated_costs[(i-dirx)*disp_range+(j)*nx*disp_range+(0)],
                                  costs[(i)*disp_range+(j)*nx*disp_range+(0)],
                                  abs(left_image[(i)+(j)*nx]-left_image[(i-dirx)+(j)*nx]),
                                   accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)], nx, ny, disp_range );
@@ -490,7 +490,7 @@ __device__ void iterate_direction_dirxneg(const int dirx, const int *left_image,
 
   
 }
-__device__ void iterate_direction_diryneg(const int diry, const int *left_image,
+__device__ void diterate_direction_diryneg(const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range )
 {
@@ -510,7 +510,7 @@ __device__ void iterate_direction_diryneg(const int diry, const int *left_image,
                   }
               }
               else {
-                  evaluate_path( accumulated_costs[(i)*disp_range+(j-diry)*nx*disp_range+(0)],
+                  devaluate_path( accumulated_costs[(i)*disp_range+(j-diry)*nx*disp_range+(0)],
                            costs[(i)*disp_range+(j)*nx*disp_range+(0)],
                            abs(left_image[(i)+(j)*nx])-left_image[(i)+(j-diry)*nx],
                            accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(0)] , nx, ny, disp_range);
@@ -525,7 +525,7 @@ __device__ void iterate_direction_diryneg(const int diry, const int *left_image,
  
 }
 
-__global__ void iterate_direction( const int dirx, const int diry, const int *left_image,
+__global__ void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs, 
                         const int nx, const int ny, const int disp_range ) 
 {
@@ -534,27 +534,27 @@ __global__ void iterate_direction( const int dirx, const int diry, const int *le
       // LEFT MOST EDGE
       // Process every pixel along this edge
    
-      iterate_direction_dirxpos  <<< grid, block >>>  (dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirxpos(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
     } 
     else if ( diry > 0 ) {
       // TOP MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the top left most pixel
-      iterate_direction_dirypos  <<< grid, block >>>  (diry,h_leftIm,costs,dir_accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
       
     } 
     else if ( dirx < 0 ) {
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
-      iterate_direction_dirxneg  <<< grid, block >>>  (dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
       
     } 
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the bottom left and bottom right pixel
-      iterate_direction_diryneg <<< grid, block >>> (diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
       
     }
 }
@@ -615,7 +615,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       
-      iterate_direction <<< grid, block >>>  ( dirx, diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
+      diterate_direction <<< grid, block >>>  ( dirx, diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
       inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
   dirx=0;
@@ -623,7 +623,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
      
-      iterate_direction <<< grid, block >>>  (dirx, diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range));
+      diterate_direction <<< grid, block >>>  (dirx, diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
       inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
   
@@ -634,7 +634,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   free(costs);
   free(dir_accumulated_costs);
 
-  create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
+  create_disparity_view( accumulated_costs, h_dispImD, nx, ny, disp_range );
 
   free(accumulated_costs);
     
