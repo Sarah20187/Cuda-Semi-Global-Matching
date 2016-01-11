@@ -69,11 +69,11 @@ int find_min_index( const int *v, const int dist_range ) ;
 void create_disparity_view( const int *accumulated_costs , int * disp_image, int nx, int ny) ;
 
 void sgmHost(   const int *h_leftIm, const int *h_rightIm,
-                int *h_dispIm,
+                int *dev_costs,
                 const int w, const int h, const int disp_range );
 
 void sgmDevice( const int *h_leftIm, const int *h_rightIm,
-                int *h_dispImD,
+                int *dev_costs,
                 const int w, const int h, const int disp_range );
 
 void usage(char *command);
@@ -303,7 +303,7 @@ void create_disparity_view( const int *accumulated_costs , int * disp_image,
 
 // sgm code to run on the host
 void sgmHost(   const int *h_leftIm, const int *h_rightIm,
-                int *h_dispIm,
+                int *costs,
                 const int w, const int h, const int disp_range)
 {
     const int nx = w;
@@ -358,43 +358,28 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
-
+//  int d = blockIdx.z * blockDim.z + threadIdx.z;  // coord z
 
 if(i<nx && j<ny){
-
-//std::fill(costs, costs+nx*ny*disp_range, 255u);
-  //we need to replace this for with something
   for ( int d = 0; d < disp_range; d++ ) {
-    // Macros inside kernel? What do we need to change?
-   // COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
-   //no macro alternative (safer?)
-   if(COSTS(i,j,d) < 0)
+
+   /*if(COSTS(i,j,d) < 0)
       COSTS(i,j,d) = 255u;
-  else
+  else*/
       COSTS(i,j,d)= abs(LEFT_IMAGE(i,j) - RIGHT_IMAGE(i,j));
-  //  COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
+
   }
 }
 
 
- /*
-std::fill(costs, costs+nx*ny*disp_range, 255u);
 
-  for ( int j = 0; j < ny; j++ ) {
-      for ( int d = 0; d < disp_range; d++ ) {
-          for ( int i = d; i < nx; i++ ) {
-              COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
-        }
-      }
-  }
- */
 }
 
 
 // sgm code to run on the GPU
 /////////////////////////////////////////////////////////////////////////////////////////
 void sgmDevice( const int *h_leftIm, const int *h_rightIm,
-                int *h_dispImD,
+                int *dev_costs,
                 const int w, const int h, const int disp_range )
 {
     const int nx = w;
@@ -435,7 +420,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   int *left_image;
   int *right_image;
   int *costs;
-  int *dev_costs;
+
 
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
   cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
@@ -463,7 +448,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
   // not sure what to send
-//  cudaMemcpy(dev_costs, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(dev_costs, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   cudaFree(left_image);
   cudaFree(right_image);
