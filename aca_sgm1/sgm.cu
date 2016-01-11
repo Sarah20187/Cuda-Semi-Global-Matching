@@ -359,6 +359,8 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
+if(i>nx || j>ny)
+  return; 
 
 //std::fill(costs, costs+nx*ny*disp_range, 255u);
   //we need to replace this for with something
