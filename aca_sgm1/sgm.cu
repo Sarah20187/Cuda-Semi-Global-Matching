@@ -358,7 +358,7 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
- 
+
 
 if(i<nx && j<ny){
 
@@ -463,7 +463,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
   // not sure what to send
-  cudaMemcpy(dev_costs, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+//  cudaMemcpy(dev_costs, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   cudaFree(left_image);
   cudaFree(right_image);
