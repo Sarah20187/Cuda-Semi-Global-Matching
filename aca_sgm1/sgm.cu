@@ -379,7 +379,7 @@ if(i<nx && j<ny){
 // sgm code to run on the GPU
 /////////////////////////////////////////////////////////////////////////////////////////
 void sgmDevice( const int *h_leftIm, const int *h_rightIm,
-                int *h_distIm,
+                int *h_dispIm,
                 const int w, const int h, const int disp_range )
 {
     const int nx = w;
@@ -420,7 +420,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
 
-  cudaMemcpy(h_dispIm, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(costs,h_dispIm ,nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
