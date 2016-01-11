@@ -369,14 +369,14 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 #define DISP_IMAGE(i,j)           disp_image[(i)+(j)*nx]*/
 
 
-std::fill(costs, costs+nx*ny*disp_range, 255u);
+//std::fill(costs, costs+nx*ny*disp_range, 255u);
   //we need to replace this for with something
   for ( int d = 0; d < disp_range; d++ ) {
     // Macros inside kernel? What do we need to change?
    // COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
    //no macro alternative (safer?)
    if(costs[(i)*disp_range+(j)*nx*disp_range+(d)] < 0)
-      costs[(i)*disp_range+(j)*nx*disp_range+(d)] = 255u; 
+      costs[(i)*disp_range+(j)*nx*disp_range+(d)] = 255u;
   else
       costs[(i)*disp_range+(j)*nx*disp_range+(d)] = abs( left_image[(i) + (j)*nx] - right_image[(i-d)+(j)*nx] );
   //  COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
