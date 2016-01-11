@@ -453,7 +453,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   create_disparity_view <<< grid, block >>> (daccumulated_costs,disp_image,nx,ny, disp_range, min);
 
   // not sure what to send
-  cudaMemcpy(h_dispIm, disp_image, imageSize, cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
 
   free(accumulated_costs);
     
