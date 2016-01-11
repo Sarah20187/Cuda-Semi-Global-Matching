@@ -527,10 +527,26 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
                 int *h_dispImD, 
                 const int w, const int h, const int disp_range )
 {
-    const int nx = w;
-    const int ny = h;
-    int imageSize = nx * ny * sizeof(int);
- /*
+  const int nx = w;
+  const int ny = h;
+  int imageSize = nx * ny * sizeof(int);
+  int size = nx * ny * disp_range * sizeof(int);
+
+  int block_x = 32;
+  int block_y = 16; //32*16 = 512
+
+  int grid_x = ceil((float)nx / block_x);
+  int grid_y = ceil((float)ny / block_y);
+
+  dim3 block(block_x,block_y);
+  dim3 grid(grid_x, grid_y);
+
+  int *left_image, *dev_costs, *ddir_accumulated_costs;
+  cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
+  cudaMalloc((void **)&dev_costs, size);
+  cudaMalloc((void **)&ddir_accumulated_costs, size);   
+ 
+ 
   // Processing all costs. W*H*D. D= disp_range
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   if (costs == NULL) { 
@@ -538,6 +554,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
                 " Failed memory allocation(s).\n");
         exit(1);
   }
+  
 
   determine_costs(h_leftIm, h_rightIm, costs, nx, ny, disp_range);
 
@@ -548,7 +565,14 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
                 " Failed memory allocation(s).\n");
         exit(1);
   }
+ 
 
+  cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);  
+  cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
+  cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
+
+ 
+  
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
       if(dirx==0 && diry==0) continue;
@@ -563,6 +587,10 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
       inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
+  
+    // inside cycle?
+
+  cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
 
   free(costs);
   free(dir_accumulated_costs);
@@ -570,42 +598,16 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
 
   free(accumulated_costs);
+    
+  cudaFree(left_image); 
+  cudaFree(dev_costs); 
+  cudaFree(ddir_accumulated_costs); 
 
-*/
+
+
+
 
   
-  //do we really need in and out image?
- // int imageSize = nx * ny * sizeof(int);  //image size in bytes
- // cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
- // cudaMalloc((void **)&devPtr_imgOut, imageSize);   //alocar memoria para o out
-  int cost_size = nx*ny*disp_range*sizeof(int);
-  int *pcosts = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  int *a_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  int *dir_a_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-
-
-  int *left_image;
-  cudaMalloc((void **)&left_image, imageSize);
-  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  
-  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  
-  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   
-
-  //not sure what to send
-  cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
-  //cudaMemcpy(costs,pcosts,cost_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(accumulated_costs,a_costs,cost_size, cudaMemcpyHostToDevice);
-  cudaMemcpy(dir_accumulated_costs,dir_a_costs,cost_size, cudaMemcpyHostToDevice);
-  
-
-  int block_x = 32;
-  int block_y = 16; //32*16 = 512
-
-  int grid_x = ceil((float)nx / block_x);
-  int grid_y = ceil((float)ny / block_y);
-
-  dim3 block(block_x,block_y);
-  dim3 grid(grid_x, grid_y);
-
 
 //add for cycle for(dirx=-1; dirx<2; dirx++)
 //do we need both for cycles? or only one?  
@@ -637,13 +639,13 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   // not sure what to send
   //cudaMemcpy(h_dispImD, devPtr_imgOut, imageSize, cudaMemcpyDeviceToHost);
-  cudaMemcpy(h_dispImD, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_dispImD, costs, size, cudaMemcpyDeviceToHost);
   //maybe like this?
   //cudaMemcpy(pcosts, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   cudaFree(left_image);
   
-  cudaFree(costs);    
+  cudaFree(dev_costs);    
   cudaFree(accumulated_costs); 
   cudaFree(dir_accumulated_costs);
 

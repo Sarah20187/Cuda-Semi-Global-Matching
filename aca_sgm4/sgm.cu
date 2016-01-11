@@ -386,52 +386,12 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 {
 
 
-    const int nx = w;
-    const int ny = h;
-/*
-  // Processing all costs. W*H*D. D= disp_range
-  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (costs == NULL) { 
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }
-
-  determine_costs(h_leftIm, h_rightIm, costs, nx, ny, disp_range);
-
-  int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) { 
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }  
-  free(costs);
-  free(dir_accumulated_costs);
-   create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
-
-  free(accumulated_costs);
-*/
-
-  
-  int imageSize = nx * ny * sizeof(int);  //image size in bytes
-  int min = std::numeric_limits<int>::max(); // min for __device__ find function
-
-  //do we really need in and out image?
-/* cudaMalloc((void **)&devPtr_imgIn, imageSize);  //alocar memoria 
-  cudaMalloc((void **)&devPtr_imgOut, imageSize);   //alocar memoria para o out
-*/
-  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-//  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
-  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //check this line
-//  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //check this line
  
-
-//tenho que passar o disp_range e accumulated_costs
-
-  //not sure what to send
+  const int nx = w;
+  const int ny = h;
+  int imageSize = nx * ny * sizeof(int);
   
-  cudaMemcpy(accumulated_costs,costs,imageSize, cudaMemcpyHostToDevice);
+  int min = std::numeric_limits<int>::max(); // min for __device__ find function  
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -442,18 +402,67 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
 
-  create_disparity_view <<< grid, block >>> (accumulated_costs,disp_image,nx,ny, disp_range, min);
+  int *daccumulated_costs , *disp_image ;
+  cudaMalloc((void **)&daccumulated_costs, nx*ny*disp_range*sizeof(int));  
+  cudaMalloc((void **)&disp_image, imageSize);   
+ 
+  // Processing all costs. W*H*D. D= disp_range
+  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
+  if (costs == NULL) { 
+        fprintf(stderr, "sgm_cuda:"
+                " Failed memory allocation(s).\n");
+        exit(1);
+  }
+  
+
+  determine_costs(h_leftIm, h_rightIm, costs, nx, ny, disp_range);
+
+  int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
+  int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
+  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) { 
+        fprintf(stderr, "sgm_cuda:"
+                " Failed memory allocation(s).\n");
+        exit(1);
+  }
+
+  int size = nx * ny * disp_range * sizeof(int);
+
+  cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+  cudaMemcpy(disp_image, h_dispIm, Imagesize, cudaMemcpyHostToDevice);
+
+
+  int dirx=0,diry=0;
+  for(dirx=-1; dirx<2; dirx++) {
+      if(dirx==0 && diry==0) continue;
+      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
+      iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
+      inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+  }
+  dirx=0;
+  for(diry=-1; diry<2; diry++) {
+      if(dirx==0 && diry==0) continue;
+      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
+      iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
+      inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+  }
+    
+
+  free(costs);
+  free(dir_accumulated_costs);
+
+  create_disparity_view <<< grid, block >>> (daccumulated_costs,disp_image,nx,ny, disp_range, min);
 
   // not sure what to send
-  cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
-  
-//  cudaFree(devPtr_imgIn);
- // cudaFree(devPtr_imgOut);
+  cudaMemcpy(h_dispIm, disp_image, imageSize, cudaMemcpyDeviceToHost);
 
-//  cudaFree(costs);    //not sure if costs is needed
-  cudaFree(accumulated_costs);
- // cudaFree(dir_accumulated_costs);
-  
+  free(accumulated_costs);
+    
+   
+  cudaFree(daccumulated_costs); 
+  cudaFree(ddir_accumulated_costs); 
+
+
+   
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 

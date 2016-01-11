@@ -385,11 +385,12 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
                 int *h_dispIm,
                 const int w, const int h, const int disp_range )
 {
-    const int nx = w;
-    const int ny = h;
 
-    int imageSize = nx * ny * sizeof(int);  //image size in bytes
+  const int nx = w;
+  const int ny = h;
 
+  int imageSize = nx * ny * sizeof(int);  //image size in bytes
+  int size = nx * ny * disp_range * sizeof(int);
   //do we really need in and out image?
 
   int *left_image;
@@ -406,15 +407,12 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
   cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
-
-  cudaMalloc((void **)&dev_costs, nx*ny*disp_range*sizeof(int));
-//  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
-//  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //dont need this for this kernel
+  cudaMalloc((void **)&dev_costs, size);
 
   //not sure what to send
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
-
+  cudaMemcpy(dev_costs,costs,imageSize,cudaMemcpyHostToDevice);
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -427,10 +425,10 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
 
 
-  determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
+  determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
 
 
-  cudaMemcpy(dev_costs,costs ,nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(costs,dev_costs,size, cudaMemcpyDeviceToHost);
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
@@ -462,15 +460,11 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   free(accumulated_costs);
 
-
-
-
   cudaFree(left_image);
   cudaFree(right_image);
 
-  cudaFree(costs);
-//  cudaFree(accumulated_costs); //dont need this for this kernel
-//  cudaFree(dir_accumulated_costs); //dont need this for this kernel
+  cudaFree(dev_costs);
+
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
