@@ -359,15 +359,6 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
-  //int id = i + j * nx;
-
-
-/*#define COSTS(i,j,d)              costs[(i)*disp_range+(j)*nx*disp_range+(d)]
-#define ACCUMULATED_COSTS(i,j,d)  accumulated_costs[(i)*disp_range+(j)*nx*disp_range+(d)]
-#define LEFT_IMAGE(i,j)           left_image[(i)+(j)*nx]
-#define RIGHT_IMAGE(i,j)          right_image[(i)+(j)*nx]
-#define DISP_IMAGE(i,j)           disp_image[(i)+(j)*nx]*/
-
 
 //std::fill(costs, costs+nx*ny*disp_range, 255u);
   //we need to replace this for with something
@@ -453,7 +444,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   //not sure what to send
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
-  
+
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -469,7 +460,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
   // not sure what to send
-  cudaMemcpy(costs_dev, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(dev_costs, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   cudaFree(left_image);
   cudaFree(right_image);
