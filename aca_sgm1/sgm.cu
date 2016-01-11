@@ -391,13 +391,20 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   int *left_image;
   int *right_image;
-  int *costs;
+  int *dev_costs;
+
+  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
+  if (costs == NULL) {
+        fprintf(stderr, "sgm_cuda:"
+                " Failed memory allocation(s).\n");
+        exit(1);
+  }
 
 
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
   cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
 
-  cudaMalloc((void **)&costs, nx*ny*disp_range*sizeof(int));
+  cudaMalloc((void **)&dev_costs, nx*ny*disp_range*sizeof(int));
 //  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
 //  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //dont need this for this kernel
 
@@ -420,7 +427,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
 
-  cudaMemcpy(costs,h_dispIm ,nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(dev_costs,costs ,nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
