@@ -441,19 +441,19 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   int *left_image;
   int *right_image;
   int *costs;
+  int *dev_costs;
 
   cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
   cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
 
-  cudaMalloc((void **)&costs, nx*ny*disp_range,sizeof(int));
+  cudaMalloc((void **)&costs, nx*ny*disp_range*sizeof(int));
 //  cudaMalloc((void **)&accumulated_costs, nx*ny*disp_range,sizeof(int));  //dont need this for this kernel
 //  cudaMalloc((void **)&dir_accumulated_costs, nx*ny*disp_range,sizeof(int));   //dont need this for this kernel
 
   //not sure what to send
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
-
-
+  
 
   int block_x = 32;
   int block_y = 16; //32*16 = 512
@@ -469,7 +469,7 @@ int imageSize = nx * ny * sizeof(int);  //image size in bytes
   determine_costs_k <<< grid, block >>> (left_image,right_image,costs,disp_range,nx,ny);
 
   // not sure what to send
-  cudaMemcpy(h_dispImD, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(costs_dev, costs, nx*ny*disp_range*sizeof(int), cudaMemcpyDeviceToHost);
 
   cudaFree(left_image);
   cudaFree(right_image);
