@@ -351,9 +351,9 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 }
 
 
-__device__ int dfind_min_index( const int *v, const int disp_range, int min ) 
+__device__ int dfind_min_index( const int *v, const int disp_range) 
 {
-   
+    int min = 2147483647;
     int minind = -1;
     for (int d=0; d < disp_range; d++) {
          if(v[d]<min) {
@@ -366,14 +366,14 @@ __device__ int dfind_min_index( const int *v, const int disp_range, int min )
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void dcreate_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range, int min)
+__global__ void dcreate_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range)
 {
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
   if(i<nx && j<ny ){
- 	 disp_image[(i)+(j)*nx] = 4 * dfind_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range, min);
+ 	 disp_image[(i)+(j)*nx] = 4 * dfind_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range);
   }
 }
 
@@ -391,8 +391,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   const int ny = h;
   int imageSize = nx * ny * sizeof(int);
   
-  int min = std::numeric_limits<int>::max(); // min for __device__ find function  
-
+  
   int block_x = 32;
   int block_y = 16; //32*16 = 512
 
@@ -450,7 +449,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   free(costs);
   free(dir_accumulated_costs);
 
-  dcreate_disparity_view <<< grid, block >>> (daccumulated_costs,disp_image,nx,ny, disp_range, min);
+  dcreate_disparity_view <<< grid, block >>> (daccumulated_costs,disp_image,nx,ny, disp_range);
 
   // not sure what to send
   cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
