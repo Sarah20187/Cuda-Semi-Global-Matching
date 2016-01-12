@@ -363,10 +363,10 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 if(i<nx && j<ny){
 
   for ( int d = 0; d < disp_range; d++ ) {
-      COSTS(i,j,d)=255u;
-   /*if(COSTS(i,j,d) < 0)
+      //COSTS(i,j,d)=255u;
+   if(i < d)
       COSTS(i,j,d) = 255u;
-  else*/
+   else
 //      COSTS(i,j,d)= abs(LEFT_IMAGE(i,j) - RIGHT_IMAGE(i,j));
 
       COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
@@ -391,7 +391,6 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   int imageSize = nx * ny * sizeof(int);  //image size in bytes
   int size = nx * ny * disp_range * sizeof(int);
-  //do we really need in and out image?
 
   int *left_image;
   int *right_image;
@@ -422,7 +421,6 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   dim3 block(block_x,block_y);
   dim3 grid(grid_x, grid_y);
-
 
 
   determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
