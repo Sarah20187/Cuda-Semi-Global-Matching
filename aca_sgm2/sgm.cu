@@ -399,10 +399,10 @@ __device__ void diterate_direction_dirxpos(const int dirx, const int *left_image
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
-  /*
+  
 const int WIDTH = nx;
     const int HEIGHT = ny;
-
+/*
       for ( int j = 0; j < HEIGHT; j++ ) {
           for ( int i = 0; i < WIDTH; i++ ) {*/
         if(i>0 && i < WIDTH && j< HEIGHT && j>0) {
@@ -436,10 +436,10 @@ __device__ void diterate_direction_dirypos(const int diry, const int *left_image
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
 
-  /*
+  
   const int WIDTH = nx;
     const int HEIGHT = ny;
-
+/*
       for ( int i = 0; i < WIDTH; i++ ) {
           for ( int j = 0; j < HEIGHT; j++ ) {*/
         if(i>0 && i < WIDTH && j< HEIGHT && j>0) {
@@ -474,8 +474,8 @@ __device__ void diterate_direction_dirxneg(const int dirx, const int *left_image
 
   
   const int WIDTH = nx;
-  /*  const int HEIGHT = ny;
-
+ const int HEIGHT = ny;
+/*
       for ( int j = 0; j < HEIGHT; j++ ) {
           for ( int i = WIDTH-1; i >= 0; i-- ) {*/
           if(i>=0 && i < WIDTH-1 && j< HEIGHT && j>0) {      
@@ -507,9 +507,9 @@ __device__ void diterate_direction_diryneg(const int diry, const int *left_image
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
-  /*
-   const int WIDTH = nx;*/
-    const int HEIGHT = ny;
+  
+   const int WIDTH = nx;
+   const int HEIGHT = ny;
 /*
       for ( int i = 0; i < WIDTH; i++ ) {
           for ( int j = HEIGHT-1; j >= 0; j-- ) {*/
