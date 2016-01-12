@@ -354,15 +354,28 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 __global__ void dinplace_sum_views(int * im1, const int * im2, 
                         const int nx, const int ny, const int disp_range ){
 
-
+  /*
     int *im1_init = im1;
     while ( im1 != (im1_init + (nx*ny*disp_range)) ) {
       *im1 += *im2;
       im1++;
       im2++;
     }
+ */
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  
+  if( i>0 && i < nx*ny*dist_range){
+    im1[i] += im2[i];
 
+  }
 
+/*
+  for ( int j = 0; j < ny; j++ ) {
+    for ( int i = 0; i < nx; i++ ) {
+      DISP_IMAGE(i,j) =
+        4 * find_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range );
+    }
+  }
+*/
 /*
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
