@@ -415,29 +415,35 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
                 " Failed memory allocation(s).\n");
         exit(1);
   }
-  int size = nx * ny * disp_range * sizeof(int);
+  int size = nx * ny * disp_range * sizeof(int);/*
   cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
   cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
-
+*/
 
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
       if(dirx==0 && diry==0) continue;
+      cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+      cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
-      dinplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+      dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
+      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
   }
   dirx=0;
   for(diry=-1; diry<2; diry++) {
       if(dirx==0 && diry==0) continue;
+      cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+      cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
-      dinplace_sum_views <<< grid, block >>> (accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
+      dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
+      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
   }
 
     // inside cycle?
 
-  cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
+ // cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
 
   free(costs);
   free(dir_accumulated_costs);
