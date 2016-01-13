@@ -436,7 +436,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   int size = nx * ny * disp_range * sizeof(int);
 
-  cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+  
   cudaMemcpy(disp_image, h_dispImD, imageSize, cudaMemcpyHostToDevice);
 
 
@@ -454,8 +454,8 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
       inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
-    
-
+ cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);	    
+	
   free(costs);
   free(dir_accumulated_costs);
 
