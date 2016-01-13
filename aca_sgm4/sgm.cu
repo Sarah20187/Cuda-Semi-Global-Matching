@@ -372,9 +372,19 @@ __global__ void dcreate_disparity_view(const int *accumulated_costs, int * disp_
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
-  if(i<nx && j<ny ){
+  if(i<nx && j<ny && j>=0 && i>=0){
  	 disp_image[(i)+(j)*nx] = 4 * dfind_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range);
   }
+
+/*{
+  for ( int j = 0; j < ny; j++ ) {
+    for ( int i = 0; i < nx; i++ ) {
+      DISP_IMAGE(i,j) =
+        4 * find_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range );
+    }
+  }
+}*/
+
 }
 
 

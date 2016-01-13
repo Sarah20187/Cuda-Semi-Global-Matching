@@ -513,7 +513,7 @@ __device__ void diterate_direction_diryneg(const int diry, const int *left_image
 /*
       for ( int i = 0; i < WIDTH; i++ ) {
           for ( int j = HEIGHT-1; j >= 0; j-- ) {*/
-        if(i>0 && i < WIDTH && j< HEIGHT-1 && j>=0) {
+        if(i>=0 && i < WIDTH && j< HEIGHT-1 && j>=0) {
               if(j==HEIGHT-1) {
                   for ( int d = 0; d < disp_range; d++ ) {
                       ACCUMULATED_COSTS(i,HEIGHT-1,d) += COSTS(i,HEIGHT-1,d);
