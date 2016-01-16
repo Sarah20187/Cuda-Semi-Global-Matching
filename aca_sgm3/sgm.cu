@@ -388,7 +388,7 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
 // sgm code to run on the GPU
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void sgmDevice( const int *h_leftIm, const int *h_rightIm, 
-                int *h_dispImD, 
+                int *h_dispIm,
                 const int w, const int h, const int disp_range )
 {
 
@@ -468,7 +468,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   free(costs);
   free(dir_accumulated_costs);
 
-  create_disparity_view( accumulated_costs, h_dispImD, nx, ny, disp_range );
+  create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
 
   free(accumulated_costs);
     
