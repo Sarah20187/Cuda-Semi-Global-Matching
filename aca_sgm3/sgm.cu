@@ -446,7 +446,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       printf("calling kernel1\n");
       dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(dir_accumulated_costs,ddir_accumulated_costs,cudaMemcpyDeviceToHost);
+      cudaMemcpy(dir_accumulated_costs,ddir_accumulated_costs,size,cudaMemcpyDeviceToHost);
       printf("exiting kernel2\n"); 
   }
    // cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
