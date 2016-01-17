@@ -366,7 +366,7 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
   int j = blockIdx.y * blockDim.y + threadIdx.y;    
 
   if( i>=0 && i < nx*ny*disp_range){
-    im1[i] += im2[i];
+    im1[(i)+(j)*nx] += im2[(i)+(j)*nx];
 
   }
 
