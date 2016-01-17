@@ -34,46 +34,46 @@
 
 /* function headers */
 
-void determine_costs(const int *left_image, const int *right_image, int *costs, 
+void determine_costs(const int *left_image, const int *right_image, int *costs,
                      const int nx, const int ny, const int disp_range);
 
 void evaluate_path( const int *prior, const int* local,
-                    int path_intensity_gradient, int *curr_cost, 
+                    int path_intensity_gradient, int *curr_cost,
                     const int nx, const int ny, const int disp_range );
 
 void iterate_direction_dirxpos(const int dirx, const int *left_image,
-                               const int* costs, int *accumulated_costs, 
+                               const int* costs, int *accumulated_costs,
                                const int nx, const int ny, const int disp_range );
 
 void iterate_direction_dirypos(const int diry, const int *left_image,
-                               const int* costs, int *accumulated_costs, 
+                               const int* costs, int *accumulated_costs,
                                const int nx, const int ny, const int disp_range );
 
 void iterate_direction_dirxneg(const int dirx, const int *left_image,
-                               const int* costs, int *accumulated_costs, 
+                               const int* costs, int *accumulated_costs,
                                const int nx, const int ny, const int disp_range );
 
 void iterate_direction_diryneg(const int diry, const int *left_image,
-                               const int* costs, int *accumulated_costs, 
+                               const int* costs, int *accumulated_costs,
                                const int nx, const int ny, const int disp_range );
 
 void iterate_direction( const int dirx, const int diry, const int *left_image,
-                        const int* costs, int *accumulated_costs, 
+                        const int* costs, int *accumulated_costs,
                         const int nx, const int ny, const int disp_range ) ;
 
-void inplace_sum_views( int * im1, const int * im2, 
+void inplace_sum_views( int * im1, const int * im2,
                         const int nx, const int ny, const int disp_range ) ;
 
 int find_min_index( const int *v, const int dist_range ) ;
 
 void create_disparity_view( const int *accumulated_costs , int * disp_image, int nx, int ny) ;
 
-void sgmHost(   const int *h_leftIm, const int *h_rightIm, 
-                int *h_dispIm, 
+void sgmHost(   const int *h_leftIm, const int *h_rightIm,
+                int *h_dispIm,
                 const int w, const int h, const int disp_range );
 
-void sgmDevice( const int *h_leftIm, const int *h_rightIm, 
-                int *h_dispImD, 
+void sgmDevice( const int *h_leftIm, const int *h_rightIm,
+                int *h_dispImD,
                 const int w, const int h, const int disp_range );
 
 void usage(char *command);
@@ -81,7 +81,7 @@ void usage(char *command);
 
 /* functions code */
 
-void determine_costs(const int *left_image, const int *right_image, int *costs, 
+void determine_costs(const int *left_image, const int *right_image, int *costs,
                      const int nx, const int ny, const int disp_range)
 {
   std::fill(costs, costs+nx*ny*disp_range, 255u);
@@ -96,8 +96,8 @@ void determine_costs(const int *left_image, const int *right_image, int *costs,
 }
 
 void iterate_direction_dirxpos(const int dirx, const int *left_image,
-                        const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ) 
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
 {
     const int WIDTH = nx;
     const int HEIGHT = ny;
@@ -120,8 +120,8 @@ void iterate_direction_dirxpos(const int dirx, const int *left_image,
 }
 
 void iterate_direction_dirypos(const int diry, const int *left_image,
-                        const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ) 
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
 {
     const int WIDTH = nx;
     const int HEIGHT = ny;
@@ -144,8 +144,8 @@ void iterate_direction_dirypos(const int diry, const int *left_image,
 }
 
 void iterate_direction_dirxneg(const int dirx, const int *left_image,
-                        const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ) 
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
 {
     const int WIDTH = nx;
     const int HEIGHT = ny;
@@ -168,8 +168,8 @@ void iterate_direction_dirxneg(const int dirx, const int *left_image,
 }
 
 void iterate_direction_diryneg(const int diry, const int *left_image,
-                        const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ) 
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
 {
     const int WIDTH = nx;
     const int HEIGHT = ny;
@@ -190,29 +190,29 @@ void iterate_direction_diryneg(const int diry, const int *left_image,
          }
       }
 }
- 
+
 void iterate_direction( const int dirx, const int diry, const int *left_image,
-                        const int* costs, int *accumulated_costs, 
-                        const int nx, const int ny, const int disp_range ) 
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
 {
     // Walk along the edges in a clockwise fashion
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
       // Process every pixel along this edge
       iterate_direction_dirxpos(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
-    } 
+    }
     else if ( diry > 0 ) {
       // TOP MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the top left most pixel
       iterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
-    } 
+    }
     else if ( dirx < 0 ) {
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
       iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
-    } 
+    }
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
       // Process every pixel along this edge only if dirx ==
@@ -221,10 +221,10 @@ void iterate_direction( const int dirx, const int diry, const int *left_image,
     }
 }
 
-// ADD two cost images 
+// ADD two cost images
 
-void inplace_sum_views( int * im1, const int * im2, 
-                        const int nx, const int ny, const int disp_range ) 
+void inplace_sum_views( int * im1, const int * im2,
+                        const int nx, const int ny, const int disp_range )
 {
     int *im1_init = im1;
     while ( im1 != (im1_init + (nx*ny*disp_range)) ) {
@@ -234,7 +234,7 @@ void inplace_sum_views( int * im1, const int * im2,
     }
 }
 
-int find_min_index( const int *v, const int disp_range ) 
+int find_min_index( const int *v, const int disp_range )
 {
     int min = std::numeric_limits<int>::max();
     int minind = -1;
@@ -248,8 +248,8 @@ int find_min_index( const int *v, const int disp_range )
 }
 
 void evaluate_path(const int *prior, const int *local,
-                   int path_intensity_gradient, int *curr_cost , 
-                   const int nx, const int ny, const int disp_range) 
+                   int path_intensity_gradient, int *curr_cost ,
+                   const int nx, const int ny, const int disp_range)
 {
   memcpy(curr_cost, local, sizeof(int)*disp_range);
 
@@ -282,8 +282,8 @@ void evaluate_path(const int *prior, const int *local,
   }
 }
 
-void create_disparity_view( const int *accumulated_costs , int * disp_image, 
-                            const int nx, const int ny, const int disp_range) 
+void create_disparity_view( const int *accumulated_costs , int * disp_image,
+                            const int nx, const int ny, const int disp_range)
 {
   for ( int j = 0; j < ny; j++ ) {
     for ( int i = 0; i < nx; i++ ) {
@@ -294,7 +294,7 @@ void create_disparity_view( const int *accumulated_costs , int * disp_image,
 }
 
 
- 
+
 
 /*
  * Links:
@@ -303,16 +303,16 @@ void create_disparity_view( const int *accumulated_costs , int * disp_image,
  */
 
 // sgm code to run on the host
-void sgmHost(   const int *h_leftIm, const int *h_rightIm, 
-                int *h_dispIm, 
+void sgmHost(   const int *h_leftIm, const int *h_rightIm,
+                int *h_dispIm,
                 const int w, const int h, const int disp_range)
 {
     const int nx = w;
     const int ny = h;
- 
+
   // Processing all costs. W*H*D. D= disp_range
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (costs == NULL) { 
+  if (costs == NULL) {
         fprintf(stderr, "sgm_cuda:"
                 " Failed memory allocation(s).\n");
         exit(1);
@@ -322,7 +322,7 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) { 
+  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) {
         fprintf(stderr, "sgm_cuda:"
                 " Failed memory allocation(s).\n");
         exit(1);
@@ -351,7 +351,7 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
   free(accumulated_costs);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-__global__ void dinplace_sum_views(int * im1, const int * im2, 
+__global__ void dinplace_sum_views(int * im1, const int * im2,
                         const int nx, const int ny, const int disp_range ){
 
   /*
@@ -362,7 +362,7 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
       im2++;
     }
  */
-  int i = blockIdx.x * blockDim.x + threadIdx.x;  
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
   if( i>=0 && i < nx*ny*disp_range){
     im1[i] += im2[i];
 
@@ -387,14 +387,14 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
 
 // sgm code to run on the GPU
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void sgmDevice( const int *h_leftIm, const int *h_rightIm, 
+void sgmDevice( const int *h_leftIm, const int *h_rightIm,
                 int *h_dispIm,
                 const int w, const int h, const int disp_range )
 {
 
     const int nx = w;
     const int ny = h;
- 
+
   int block_x = 32;
   int block_y = 16; //32*16 = 512
 
@@ -405,23 +405,23 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dim3 grid(grid_x, grid_y);
 
   int *daccumulated_costs , *ddir_accumulated_costs ;
-  cudaMalloc((void **)&daccumulated_costs, nx*ny*disp_range*sizeof(int));  
-  cudaMalloc((void **)&ddir_accumulated_costs, nx*ny*disp_range*sizeof(int));   
- 
+  cudaMalloc((void **)&daccumulated_costs, nx*ny*disp_range*sizeof(int));
+  cudaMalloc((void **)&ddir_accumulated_costs, nx*ny*disp_range*sizeof(int));
+
   // Processing all costs. W*H*D. D= disp_range
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (costs == NULL) { 
+  if (costs == NULL) {
         fprintf(stderr, "sgm_cuda:"
                 " Failed memory allocation(s).\n");
         exit(1);
   }
-  
+
 
   determine_costs(h_leftIm, h_rightIm, costs, nx, ny, disp_range);
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) { 
+  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) {
         fprintf(stderr, "sgm_cuda:"
                 " Failed memory allocation(s).\n");
         exit(1);
@@ -435,14 +435,15 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
       if(dirx==0 && diry==0) continue;
-     
+
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
 //      cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
+      printf("calling kernel1\n");
       dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
 //      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      
+
   }
     cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
 
@@ -451,14 +452,15 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dirx=0;
   for(diry=-1; diry<2; diry++) {
       if(dirx==0 && diry==0) continue;
-     
+
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
 //      cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
+      printf("calling kernel 2\n");
       dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
 //      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      
+
   }
     cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
     // inside cycle?
@@ -471,21 +473,21 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
 
   free(accumulated_costs);
-    
-   
-  cudaFree(daccumulated_costs); 
-  cudaFree(ddir_accumulated_costs); 
+
+
+  cudaFree(daccumulated_costs);
+  cudaFree(ddir_accumulated_costs);
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // print command line format
-void usage(char *command) 
+void usage(char *command)
 {
     printf("Usage: %s [-h] [-d device] [-l leftimage] [-r rightimage] [-o dev_dispimage] [-t host_dispimage] [-p disprange] \n",command);
 }
 
 // main
-int main( int argc, char** argv) 
+int main( int argc, char** argv)
 {
 
     // default command line options
@@ -529,7 +531,7 @@ int main( int argc, char** argv)
 
                 rightIn = strdup(optarg);
                 break;
-            case 'o': // output image (from device) filename 
+            case 'o': // output image (from device) filename
                 if(strlen(optarg)==0)
                 {
                     usage(argv[0]);
@@ -568,7 +570,7 @@ int main( int argc, char** argv)
 
     // select cuda device
     cutilSafeCall( cudaSetDevice( deviceId ) );
-    
+
     // create events to measure host sgm time and device sgm time
     cudaEvent_t startH, stopH, startD, stopD;
     cudaEventCreate(&startH);
@@ -595,19 +597,19 @@ int main( int argc, char** argv)
     // allocate mem for the result on host side
     int* h_odata = (int*) malloc( h*w*sizeof(int));
     int* reference = (int*) malloc( h*w*sizeof(int));
- 
+
     // sgm at host
     cudaEventRecord( startH, 0 );
-    sgmHost(h_ldata, h_rdata, reference, w, h, disp_range);   
-    cudaEventRecord( stopH, 0 ); 
+    sgmHost(h_ldata, h_rdata, reference, w, h, disp_range);
+    cudaEventRecord( stopH, 0 );
     cudaEventSynchronize( stopH );
 
     // sgm at GPU
     cudaEventRecord( startD, 0 );
-    sgmDevice(h_ldata, h_rdata, h_odata, w, h, disp_range);   
-    cudaEventRecord( stopD, 0 ); 
+    sgmDevice(h_ldata, h_rdata, h_odata, w, h, disp_range);
+    cudaEventRecord( stopD, 0 );
     cudaEventSynchronize( stopD );
-    
+
     // check if kernel execution generated and error
     cutilCheckMsg("Kernel execution failed");
 
