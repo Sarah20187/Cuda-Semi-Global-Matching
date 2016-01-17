@@ -363,11 +363,13 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
     }
  */
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  int j = blockIdx.y * blockDim.y + threadIdx.y;    
+  int j = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if( i>=0 && i < nx*ny*disp_range){
-    im1[(i)+(j)*nx] += im2[(i)+(j)*nx];
-
+  if(i<nx && j<ny){
+    for ( int d = 0; d < disp_range; d++ ) {
+      int idx = (i)*disp_range+(j)*nx*disp_range+(d);
+      im1[idx] += im2[idx];
+    }
   }
 
 /*
@@ -440,14 +442,17 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
+
 //      cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
-      cudaMemcpy(daccumulated_costs,accumulated_costs, size, cudaMemcpyHostToDevice); 
+      cudaMemcpy(daccumulated_costs,accumulated_costs, size, cudaMemcpyHostToDevice);
+
       printf("calling kernel1\n");
       dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
+
       cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
       cudaMemcpy(dir_accumulated_costs,ddir_accumulated_costs,size,cudaMemcpyDeviceToHost);
-      printf("exiting kernel2\n"); 
+      printf("exiting kernel2\n");
   }
    // cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
 
@@ -461,11 +466,11 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       iterate_direction( dirx,diry, h_leftIm, costs, dir_accumulated_costs, nx, ny, disp_range);
 //      cudaMemcpy(daccumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, dir_accumulated_costs, size, cudaMemcpyHostToDevice);
-      cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice); 
+      cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice);
       printf("calling kernel 2\n");
       dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost); 
+      cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost);
   }
 //    cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
     // inside cycle?
