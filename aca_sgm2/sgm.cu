@@ -249,8 +249,8 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
           for ( int i = 0; i < WIDTH; i++ ) {*/
     if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
         if(i==0) {
-            //for ( int d = 0; d < disp_range; d++ ) {
-            if(d>=0 && d< disp_range) {
+            for ( int d = 0; d < disp_range; d++ ) {
+            //if(d>=0 && d< disp_range) {
                 ACCUMULATED_COSTS(0,j,d) += COSTS(0,j,d);
             }
         }
@@ -287,8 +287,8 @@ __global__ void diterate_direction_dirypos(const int diry, const int *left_image
           for ( int j = 0; j < HEIGHT; j++ ) {*/
     if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
         if(j==0) {
-            //for ( int d = 0; d < disp_range; d++ ) {
-            if(d>=0 && d< disp_range) {
+            for ( int d = 0; d < disp_range; d++ ) {
+            //if(d>=0 && d< disp_range) {
                 ACCUMULATED_COSTS(i,0,d) += COSTS(i,0,d);
             }
         }
@@ -324,8 +324,8 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
           for ( int i = WIDTH-1; i >= 0; i-- ) {*/
     if(i>=0 && i <= WIDTH-1 && j< HEIGHT && j>=0) {
         if(i==WIDTH-1) {
-            //for ( int d = 0; d < disp_range; d++ ) {
-          if(d>=0 && d< disp_range) {
+            for ( int d = 0; d < disp_range; d++ ) {
+          //if(d>=0 && d< disp_range) {
                 ACCUMULATED_COSTS(WIDTH-1,j,d) += COSTS(WIDTH-1,j,d);
             }
         }
@@ -360,8 +360,8 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
           for ( int j = HEIGHT-1; j >= 0; j-- ) {*/
     if(i>=0 && i < WIDTH && j<= HEIGHT-1 && j>=0) {
         if(j==HEIGHT-1) {
-            //for ( int d = 0; d < disp_range; d++ ) {
-            if(d>=0 && d< disp_range) {
+            for ( int d = 0; d < disp_range; d++ ) {
+            //if(d>=0 && d< disp_range) {
                 ACCUMULATED_COSTS(i,HEIGHT-1,d) += COSTS(i,HEIGHT-1,d);
               
             }
