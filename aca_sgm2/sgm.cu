@@ -199,7 +199,7 @@ __device__ void devaluate_path(const int *prior, const int *local,
                                int path_intensity_gradient, int *curr_cost ,
                                const int nx, const int ny, const int disp_range)
 {
-    printf("ENTROU NO DEVALUATE_PATH DO DEVICE\n"); 
+     
     int numeric = 2147483647;
     memcpy(curr_cost, local, sizeof(int)*disp_range);
 
@@ -238,7 +238,7 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
                                            const int* costs, int *accumulated_costs,
                                            const int nx, const int ny, const int disp_range )
 {
-  printf("ENTROU NO KERNEL\n"); 
+  
     int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 //    int d = blockIdx.z * blockDim.z + threadIdx.z;
@@ -276,7 +276,7 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
 __global__ void diterate_direction_dirypos(const int diry, const int *left_image,
                                            const int* costs, int *accumulated_costs,
                                            const int nx, const int ny, const int disp_range){
-  printf("ENTROU NO KERNEL\n"); 
+  
     int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 //    int d = blockIdx.z * blockDim.z + threadIdx.z;
@@ -314,7 +314,7 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
                                            const int* costs, int *accumulated_costs,
                                            const int nx, const int ny, const int disp_range)
 {
-  printf("ENTROU NO KERNEL\n"); 
+  
     int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
  //   int d = blockIdx.z * blockDim.z + threadIdx.z;
@@ -350,7 +350,7 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
                                            const int* costs, int *accumulated_costs,
                                            const int nx, const int ny, const int disp_range)
 {
-    printf("ENTROU NO KERNEL\n"); 
+    
     int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
    // int d = blockIdx.z * blockDim.z + threadIdx.z;
@@ -407,8 +407,8 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
 
     dim3 gridx(gridx_x, gridx_y);
     dim3 gridy(gridy_x,gridy_y);
-    dim3 blockx(blockx_x,blockx_y)
-    dim3 blocky(blocky_x,blocky_y)
+    dim3 blockx(blockx_x,blockx_y);
+    dim3 blocky(blocky_x,blocky_y);
 
    /* int block_x = 32;
     int block_y = 16; //32*16 = 512
@@ -419,8 +419,10 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     dim3 block(block_x,block_y);
     dim3 grid(grid_x, grid_y);*/
 
+    
+  /*  
     int *dleft_image, *dev_costs, *ddir_accumulated_costs;
-  /*  cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
+    cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
     cudaMalloc((void **)&dev_costs, size);
     cudaMalloc((void **)&ddir_accumulated_costs, size);
 
@@ -432,6 +434,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
       // Process every pixel along this edge
+      int *dleft_image, *dev_costs, *ddir_accumulated_costs;
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
       cudaMalloc((void **)&dev_costs, size);
       cudaMalloc((void **)&ddir_accumulated_costs, size);
@@ -450,6 +453,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       // TOP MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the top left most pixel
+	int *dleft_image, *dev_costs, *ddir_accumulated_costs;	
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
       cudaMalloc((void **)&dev_costs, size);
       cudaMalloc((void **)&ddir_accumulated_costs, size);
@@ -468,6 +472,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
+	int *dleft_image, *dev_costs, *ddir_accumulated_costs;
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
       cudaMalloc((void **)&dev_costs, size);
       cudaMalloc((void **)&ddir_accumulated_costs, size);
@@ -485,7 +490,8 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
       // Process every pixel along this edge only if dirx ==
-      // 0. Otherwise skip the bottom left and bottom right pixel
+      // 0. Otherwise skip the bottom left and bottom right pixel	
+	int *dleft_image, *dev_costs, *ddir_accumulated_costs;
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
       cudaMalloc((void **)&dev_costs, size);
       cudaMalloc((void **)&ddir_accumulated_costs, size);
