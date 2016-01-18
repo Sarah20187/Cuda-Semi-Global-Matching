@@ -244,10 +244,11 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
 
     const int WIDTH = nx;
     const int HEIGHT = ny;
+    if(j < ny) {
 /*
-      for ( int j = 0; j < HEIGHT; j++ ) {
-          for ( int i = 0; i < WIDTH; i++ ) {*/
-    if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
+      for ( int j = 0; j < HEIGHT; j++ ) {*/
+          for ( int i = 0; i < WIDTH; i++ ) {
+  //  if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
         if(i==0) {
             for ( int d = 0; d < disp_range; d++ ) {
             //if(d>=0 && d< disp_range) {
@@ -261,9 +262,9 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
                             &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range);
         }
     }
-    /*
+
 }
-}
+/*}
 */
 
 
@@ -282,10 +283,10 @@ __global__ void diterate_direction_dirypos(const int diry, const int *left_image
 
     const int WIDTH = nx;
     const int HEIGHT = ny;
-/*
-      for ( int i = 0; i < WIDTH; i++ ) {
-          for ( int j = 0; j < HEIGHT; j++ ) {*/
-    if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
+    if(i<nx) {
+    /*  for ( int i = 0; i < WIDTH; i++ ) {*/
+         for ( int j = 0; j < HEIGHT; j++ ) {
+//    if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
         if(j==0) {
             for ( int d = 0; d < disp_range; d++ ) {
             //if(d>=0 && d< disp_range) {
@@ -299,8 +300,8 @@ __global__ void diterate_direction_dirypos(const int diry, const int *left_image
                             &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range);
         }
 
-    } /*
-          }
+    }
+  }/*
       }
   */
 
@@ -319,10 +320,10 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
 
     const int WIDTH = nx;
     const int HEIGHT = ny;
-/*
-      for ( int j = 0; j < HEIGHT; j++ ) {
-          for ( int i = WIDTH-1; i >= 0; i-- ) {*/
-    if(i>=0 && i <= WIDTH-1 && j< HEIGHT && j>=0) {
+if(j < ny) {
+    /*  for ( int j = 0; j < HEIGHT; j++ ) {*/
+          for ( int i = WIDTH-1; i >= 0; i-- ) {
+//    if(i>=0 && i <= WIDTH-1 && j< HEIGHT && j>=0) {
         if(i==WIDTH-1) {
             for ( int d = 0; d < disp_range; d++ ) {
           //if(d>=0 && d< disp_range) {
@@ -336,8 +337,8 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
                             &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
         }
     }
-    /*}
-}
+    }
+/*}
 */
 
 //  int id = i + j * nx;
@@ -355,10 +356,10 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
 
     const int WIDTH = nx;
     const int HEIGHT = ny;
-/*
-      for ( int i = 0; i < WIDTH; i++ ) {
-          for ( int j = HEIGHT-1; j >= 0; j-- ) {*/
-    if(i>=0 && i < WIDTH && j<= HEIGHT-1 && j>=0) {
+    if(i < nx ){
+    //  for ( int i = 0; i < WIDTH; i++ ) {
+    for ( int j = HEIGHT-1; j >= 0; j-- ) {
+  //  if(i>=0 && i < WIDTH && j<= HEIGHT-1 && j>=0) {
         if(j==HEIGHT-1) {
             for ( int d = 0; d < disp_range; d++ ) {
             //if(d>=0 && d< disp_range) {
@@ -373,8 +374,8 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
                             &ACCUMULATED_COSTS(i,j,0) , nx, ny, disp_range);
         }
     }
-    /*}
- }*/
+    }
+ /*}*/
 
 
 
