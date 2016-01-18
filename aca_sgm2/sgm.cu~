@@ -384,7 +384,7 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
 
 }
 
-void iterate_direction( const int dirx, const int diry, const int *left_image,
+void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs,
                         const int nx, const int ny, const int disp_range )
 {
@@ -621,39 +621,39 @@ void sgmHost(   const int *h_leftIm, const int *h_rightIm,
 }
 
 
-//__global__ void diterate_direction( const int dirx, const int diry, const int *left_image,
-//                        const int* costs, int *accumulated_costs,
-//                        const int nx, const int ny, const int disp_range)
-//{
+void iterate_direction( const int dirx, const int diry, const int *left_image,
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range)
+{
 //    // Walk along the edges in a clockwise fashion
-//    if ( dirx > 0 ) {
+    if ( dirx > 0 ) {
 //      // LEFT MOST EDGE
 //      // Process every pixel along this edge
 //
-//      diterate_direction_dirxpos(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
-//    }
-//    else if ( diry > 0 ) {
+      iterate_direction_dirxpos(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+    }
+    else if ( diry > 0 ) {
 //      // TOP MOST EDGE
 //      // Process every pixel along this edge only if dirx ==
 //      // 0. Otherwise skip the top left most pixel
-//      diterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
 //
-//    }
-//    else if ( dirx < 0 ) {
+    }
+    else if ( dirx < 0 ) {
 //      // RIGHT MOST EDGE
 //      // Process every pixel along this edge only if diry ==
 //      // 0. Otherwise skip the top right most pixel
-//      diterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
 //
-//    }
-//    else if ( diry < 0 ) {
+    }
+    else if ( diry < 0 ) {
 //      // BOTTOM MOST EDGE
 //      // Process every pixel along this edge only if dirx ==
 //      // 0. Otherwise skip the bottom left and bottom right pixel
-//      diterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
 //
-//    }
-//}
+    }
+}
 // sgm code to run on the GPU
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void sgmDevice( const int *h_leftIm, const int *h_rightIm,
@@ -663,7 +663,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
     const int nx = w;
     const int ny = h;
-
+printf("sgmDevice\n"); 
   // Processing all costs. W*H*D. D= disp_range
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   if (costs == NULL) {

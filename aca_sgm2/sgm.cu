@@ -440,7 +440,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);*/
-//      diterate_direction_dirypos  <<< grid, block >>> (diry,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirypos  <<< grid, block >>> (diry,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
       /*cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
 
       cudaFree(dleft_image);
@@ -458,7 +458,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);*/
-//      diterate_direction_dirxneg  <<< grid, block >>> (dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirxneg  <<< grid, block >>> (dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
     /*  cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
 
       cudaFree(dleft_image);
@@ -476,7 +476,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);*/
- //     diterate_direction_diryneg  <<< grid, block >>> (diry,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
+      diterate_direction_diryneg  <<< grid, block >>> (diry,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
     /*  cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
 
       cudaFree(dleft_image);
@@ -636,21 +636,21 @@ void iterate_direction( const int dirx, const int diry, const int *left_image,
 //      // TOP MOST EDGE
 //      // Process every pixel along this edge only if dirx ==
 //      // 0. Otherwise skip the top left most pixel
-//      diterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      iterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
 //
     }
     else if ( dirx < 0 ) {
 //      // RIGHT MOST EDGE
 //      // Process every pixel along this edge only if diry ==
 //      // 0. Otherwise skip the top right most pixel
-//      diterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
 //
     }
     else if ( diry < 0 ) {
 //      // BOTTOM MOST EDGE
 //      // Process every pixel along this edge only if dirx ==
 //      // 0. Otherwise skip the bottom left and bottom right pixel
-//      diterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      iterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
 //
     }
 }
