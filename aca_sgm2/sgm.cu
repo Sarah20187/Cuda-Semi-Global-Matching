@@ -284,7 +284,7 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
                                  &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
               }
           }
-      }
+      
 }
  
 void iterate_direction_diryneg(const int diry, const int *left_image,
@@ -336,7 +336,7 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
                            &ACCUMULATED_COSTS(i,j,0) , nx, ny, disp_range);
              }
          }
-      }
+      
 }
  
  
