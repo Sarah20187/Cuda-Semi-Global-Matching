@@ -408,7 +408,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
-      diterate_direction_dirxpos <<<grid, block>>>(dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
+      //diterate_direction_dirxpos <<<grid, block>>>(dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
       printf("sai cudamemcpy\n");
 
