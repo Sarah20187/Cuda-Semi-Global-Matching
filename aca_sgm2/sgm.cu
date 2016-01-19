@@ -388,6 +388,9 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     int grid_y = ceil((float)ny / block_y);
     dim3 block(block_x,block_y);
     dim3 grid(grid_x, grid_y);
+
+    //implement blocks with 512 ?
+
     // Walk along the edges in a clockwise fashion
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
