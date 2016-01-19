@@ -215,14 +215,15 @@ __global__ void diterate_direction_dirypos(const int diry, const int *left_image
                         const int nx, const int ny, const int disp_range )
 {
 
-  //  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     //int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-      for ( int i = 0; i < WIDTH; i++ ) {
+      //for ( int i = 0; i < WIDTH; i++ ) {
+      if(i>=0 && i < WIDTH) {
           for ( int j = 0; j < HEIGHT; j++ ){
-          //if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
+          
               if(j==0) {
                   for ( int d = 0; d < disp_range; d++ ) {
                       ACCUMULATED_COSTS(i,0,d) += COSTS(i,0,d);
@@ -371,7 +372,7 @@ void iterate_direction( const int dirx, const int diry, const int *left_image,
       // TOP MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the top left most pixel
-   //   iterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      iterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( dirx < 0 ) {
       // RIGHT MOST EDGE
@@ -396,18 +397,19 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
    
   int blockx_x = 1;
   int blockx_y = ny; 
-//  int blocky_x = 1;
-//  int blocky_y = 512; 
+  int blocky_x = nx;
+  int blocky_y = 1; 
 
   int gridx_x = ceil((float)nx / blockx_x);
   int gridx_y = ceil((float)ny / blockx_y);
-//  int gridy_x = ceil((float)nx / blocky_x);
-//  int gridy_y = ceil((float)ny / blocky_y);
+  int gridy_x = ceil((float)nx / blocky_x);
+  int gridy_y = ceil((float)ny / blocky_y);
 
   dim3 blockx(blockx_x,blockx_y);
   //dim3 gridx(gridx_x, gridx_y);
   dim3 gridx(1, 1);
-//  dim3 blocky(blocky_x,blocky_y);
+  dim3 gridy(1, 1);
+  dim3 blocky(blocky_x,blocky_y);
 //  dim3 gridy(gridy_x, gridy_y);
 
 
@@ -425,7 +427,7 @@ fprintf(stderr,"sai do kernel\n");
       // TOP MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the top left most pixel
-   // diterate_direction_dirypos<<<grid, block>>>(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+    diterate_direction_dirypos<<<gridy, blocky>>>(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( dirx < 0 ) {
       // RIGHT MOST EDGE
