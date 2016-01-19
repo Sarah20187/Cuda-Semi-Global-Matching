@@ -393,6 +393,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     int grid_y = ceil((float)ny / block_y);
     dim3 block(block_x,block_y);
     dim3 grid(grid_x, grid_y);
+    fprintf(stderr,"entra dirc 2\n");
 
     //implement blocks with 512 ?
 
@@ -402,8 +403,11 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       // Process every pixel along this edge
       int *dleft_image, *dev_costs, *ddir_accumulated_costs;
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
+      fprintf(stderr,"entra dirc 3\n");
       cudaMalloc((void **)&dev_costs, size);
+      fprintf(stderr,"entra dirc 4\n");
       cudaMalloc((void **)&ddir_accumulated_costs, size);
+      fprintf(stderr,"entra dirc 5\n");
       fprintf(stderr,"entra mcudamemcpy\n");
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
