@@ -640,7 +640,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   dim3 grid(grid_x, grid_y);
 
 
-  //determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
+  determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
 
 
  /* cudaMemcpy(costs,dev_costs,size, cudaMemcpyDeviceToHost); 
