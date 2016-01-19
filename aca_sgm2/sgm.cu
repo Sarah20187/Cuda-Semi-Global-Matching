@@ -383,6 +383,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs,
                         const int nx, const int ny, const int disp_range )
 {
+  fprintf(stderr,"entra dirc\n");
 
     int imageSize = nx * ny * sizeof(int);
     int size = nx * ny * disp_range * sizeof(int);
@@ -403,7 +404,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
       cudaMalloc((void **)&dev_costs, size);
       cudaMalloc((void **)&ddir_accumulated_costs, size);
-      printf("entra mcudamemcpy\n");
+      fprintf(stderr,"entra mcudamemcpy\n");
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
