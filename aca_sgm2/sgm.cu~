@@ -164,10 +164,10 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
     //int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
-     //for ( int j = 0; j < HEIGHT; j++ ){
-  	for ( int i = 0; i < WIDTH; i++ ){
+     for ( int j = 0; j < HEIGHT; j++ ){
+  	//for ( int i = 0; i < WIDTH; i++ ){
 
-	if(j>=0 && j < HEIGHT) {
+	if(i>=0 && i < WIDTH) {
    
         if(i==0) {
             for ( int d = 0; d < disp_range; d++ ) {
