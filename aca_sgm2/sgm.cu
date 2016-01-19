@@ -291,32 +291,44 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int nx, const int ny, const int disp_range )
 {
 
-    int imageSize = nx * ny * sizeof(int);
-    int size = nx * ny * disp_range * sizeof(int);
-    int block_x = 32;
-    int block_y = 16; //32*16 = 512
-    int grid_x = ceil((float)nx / block_x);
-    int grid_y = ceil((float)ny / block_y);
-    dim3 block(block_x,block_y);
-    dim3 grid(grid_x, grid_y);
+  
     // Walk along the edges in a clockwise fashion
     if ( dirx > 0 ) {
-      // LEFT MOST EDGE
-      // Process every pixel along this edge
-      int *dleft_image, *dev_costs, *ddir_accumulated_costs;
-      cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
-      cudaMalloc((void **)&dev_costs, size);
-      cudaMalloc((void **)&ddir_accumulated_costs, size);
-
-      cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
-      cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
-      cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
-      diterate_direction_dirxpos <<<grid, block>>>(dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
-      cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
-
-      cudaFree(dleft_image);
-      cudaFree(dev_costs);
-      cudaFree(ddir_accumulated_costs);
+        // LEFT MOST EDGE
+        // Process every pixel along this edge
+       
+                int *devPtr_left_image;
+                int *devPtr_costs;
+                int *devPtr_accumuated_costs;
+               
+                int imageSize = nx * ny * sizeof(int);
+                int costsSize = nx * ny * disp_range * sizeof(int);
+               
+                cudaMalloc( (void **) &devPtr_left_image, imageSize);
+                cudaMalloc( (void **) &devPtr_costs, costsSize);
+                cudaMalloc( (void **) &devPtr_accumuated_costs, costsSize);
+ 
+                // copy images to device
+                cudaMemcpy(devPtr_left_image, left_image, imageSize, cudaMemcpyHostToDevice);
+                cudaMemcpy(devPtr_costs, costs, costsSize, cudaMemcpyHostToDevice);
+                cudaMemcpy(devPtr_accumuated_costs, accumulated_costs, costsSize, cudaMemcpyHostToDevice);
+               
+                int block_x = 32;
+                int block_y = 16; // yay inside of 512 threads limit
+               
+                int grid_x = ceil( (float)nx / block_x);
+                int grid_y = ceil( (float)ny / block_y);
+ 
+                dim3 block(block_x, block_y);
+                dim3 grid(grid_x, grid_y);
+               
+                diterate_direction_dirxpos<<<grid, block>>>(dirx,devPtr_left_image,devPtr_costs,devPtr_accumuated_costs, nx, ny, disp_range);
+                 
+                //cudaMemcpy(left_image, devPtr_left_image, imageSize, cudaMemcpyDeviceToHost);
+                //cudaMemcpy(costs, devPtr_costs, costsSize, cudaMemcpyDeviceToHost);
+                cudaMemcpy(accumulated_costs, devPtr_accumuated_costs, costsSize, cudaMemcpyDeviceToHost);
+           
+                //iterate_direction_dirxpos(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( diry > 0 ) {
       // TOP MOST EDGE
