@@ -226,7 +226,7 @@ __global__ void diterate_direction_dirypos(const int diry, const int *left_image
                   }
               }
               else {
-                  evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
+                  devaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
                                  &COSTS(i,j,0),
                                  abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
                                  &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
@@ -259,6 +259,33 @@ void iterate_direction_dirxneg(const int dirx, const int *left_image,
           }
       }
 }
+__global__ void diterate_direction_dirxneg(const int dirx, const int *left_image,
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+    int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+
+    const int WIDTH = nx;
+    const int HEIGHT = ny;
+ 
+    /*  for ( int j = 0; j < HEIGHT; j++ ) {
+          for ( int i = WIDTH-1; i >= 0; i-- ) {*/
+            if(i>=0 && i <= WIDTH-1 && j< HEIGHT && j>=0) {
+              if(i==WIDTH-1) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(WIDTH-1,j,d) += COSTS(WIDTH-1,j,d);
+                  }
+              }
+              else {
+                  devaluate_path( &ACCUMULATED_COSTS(i-dirx,j,0),
+                                 &COSTS(i,j,0),
+                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i-dirx,j)),
+                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
+              }
+          }
+      }
+}
  
 void iterate_direction_diryneg(const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs,
@@ -276,6 +303,34 @@ void iterate_direction_diryneg(const int diry, const int *left_image,
               }
               else {
                   evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
+                           &COSTS(i,j,0),
+                           abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
+                           &ACCUMULATED_COSTS(i,j,0) , nx, ny, disp_range);
+             }
+         }
+      }
+}
+
+__global__ void diterate_direction_diryneg(const int diry, const int *left_image,
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
+{
+    
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+    int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+    const int WIDTH = nx;
+    const int HEIGHT = ny;
+ /*
+      for ( int i = 0; i < WIDTH; i++ ) {
+          for ( int j = HEIGHT-1; j >= 0; j-- ) {*/
+        if(i>=0 && i < WIDTH && j<= HEIGHT-1 && j>=0) {
+              if(j==HEIGHT-1) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(i,HEIGHT-1,d) += COSTS(i,HEIGHT-1,d);
+                  }
+              }
+              else {
+                  devaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
                            &COSTS(i,j,0),
                            abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
                            &ACCUMULATED_COSTS(i,j,0) , nx, ny, disp_range);
@@ -364,7 +419,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
-      diterate_direction_dirypos <<<grid, block>>> (diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirypos <<<grid, block>>> (diry,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
  
       cudaFree(dleft_image);
@@ -375,13 +430,39 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
-      iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      int *dleft_image, *dev_costs, *ddir_accumulated_costs;
+      cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
+      cudaMalloc((void **)&dev_costs, size);
+      cudaMalloc((void **)&ddir_accumulated_costs, size);
+ 
+      cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
+      cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
+      cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+      diterate_direction_dirxneg <<<grid, block>>>(dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
+      cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
+ 
+      cudaFree(dleft_image);
+      cudaFree(dev_costs);
+      cudaFree(ddir_accumulated_costs);
     }
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the bottom left and bottom right pixel
-      iterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      int *dleft_image, *dev_costs, *ddir_accumulated_costs;
+      cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
+      cudaMalloc((void **)&dev_costs, size);
+      cudaMalloc((void **)&ddir_accumulated_costs, size);
+ 
+      cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
+      cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
+      cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+      diterate_direction_diryneg <<<grid, block>>>(diry,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
+      cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
+ 
+      cudaFree(dleft_image);
+      cudaFree(dev_costs);
+      cudaFree(ddir_accumulated_costs);
     }
 }
  
