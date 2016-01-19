@@ -311,7 +311,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
-      diterate_direction_dirxpos <<grid, block>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirxpos <<<grid, block>>>(dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
 
       cudaFree(dleft_image);
@@ -370,7 +370,7 @@ void evaluate_path(const int *prior, const int *local,
   memcpy(curr_cost, local, sizeof(int)*disp_range);
 
   for ( int d = 0; d < disp_range; d++ ) {
-    int e_smooth = std::numeric_limits<int>::max();
+    int e_smooth = 2147483647;
     for ( int d_p = 0; d_p < disp_range; d_p++ ) {
       if ( d_p - d == 0 ) {
         // No penality
@@ -389,7 +389,7 @@ void evaluate_path(const int *prior, const int *local,
     curr_cost[d] += e_smooth;
   }
 
-  int min = std::numeric_limits<int>::max();
+  int min = 2147483647;
   for ( int d = 0; d < disp_range; d++ ) {
         if (prior[d]<min) min=prior[d];
   }
