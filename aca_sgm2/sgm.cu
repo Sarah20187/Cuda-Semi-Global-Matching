@@ -102,7 +102,7 @@ __device__ void devaluate_path(const int *prior, const int *local,
   memcpy(curr_cost, local, sizeof(int)*disp_range);
 
   for ( int d = 0; d < disp_range; d++ ) {
-    int e_smooth = std::numeric_limits<int>::max();
+    int e_smooth = 2147483647;
     for ( int d_p = 0; d_p < disp_range; d_p++ ) {
       if ( d_p - d == 0 ) {
         // No penality
@@ -121,7 +121,7 @@ __device__ void devaluate_path(const int *prior, const int *local,
     curr_cost[d] += e_smooth;
   }
 
-  int min = std::numeric_limits<int>::max();
+  int min = 2147483647;
   for ( int d = 0; d < disp_range; d++ ) {
         if (prior[d]<min) min=prior[d];
   }
