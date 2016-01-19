@@ -207,6 +207,34 @@ void iterate_direction_dirypos(const int diry, const int *left_image,
           }
       }
 }
+__global__ void diterate_direction_dirypos(const int diry, const int *left_image,
+                        const int* costs, int *accumulated_costs,
+                        const int nx, const int ny, const int disp_range )
+{
+    
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+    int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+    const int WIDTH = nx;
+    const int HEIGHT = ny;
+ 
+     /* for ( int i = 0; i < WIDTH; i++ ) {
+          for ( int j = 0; j < HEIGHT; j++ ) {*/
+          if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
+              if(j==0) {
+                  for ( int d = 0; d < disp_range; d++ ) {
+                      ACCUMULATED_COSTS(i,0,d) += COSTS(i,0,d);
+                  }
+              }
+              else {
+                  evaluate_path( &ACCUMULATED_COSTS(i,j-diry,0),
+                                 &COSTS(i,j,0),
+                                 abs(LEFT_IMAGE(i,j)-LEFT_IMAGE(i,j-diry)),
+                                 &ACCUMULATED_COSTS(i,j,0), nx, ny, disp_range );
+              }
+          }
+      
+}
+
  
 void iterate_direction_dirxneg(const int dirx, const int *left_image,
                         const int* costs, int *accumulated_costs,
@@ -328,7 +356,20 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       // TOP MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the top left most pixel
-      iterate_direction_dirypos(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      int *dleft_image, *dev_costs, *ddir_accumulated_costs;
+      cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
+      cudaMalloc((void **)&dev_costs, size);
+      cudaMalloc((void **)&ddir_accumulated_costs, size);
+ 
+      cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
+      cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
+      cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
+      diterate_direction_dirypos <<<grid, block>>> (diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
+ 
+      cudaFree(dleft_image);
+      cudaFree(dev_costs);
+      cudaFree(ddir_accumulated_costs);
     }
     else if ( dirx < 0 ) {
       // RIGHT MOST EDGE
