@@ -403,12 +403,13 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
       cudaMalloc((void **)&dleft_image, imageSize);  //alocar memoria
       cudaMalloc((void **)&dev_costs, size);
       cudaMalloc((void **)&ddir_accumulated_costs, size);
-
+      printf("entra mcudamemcpy\n");
       cudaMemcpy(dleft_image,left_image,imageSize, cudaMemcpyHostToDevice);
       cudaMemcpy(dev_costs, costs, size , cudaMemcpyHostToDevice);
       cudaMemcpy(ddir_accumulated_costs, accumulated_costs, size, cudaMemcpyHostToDevice);
       diterate_direction_dirxpos <<<grid, block>>>(dirx,dleft_image,dev_costs,ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
+      printf("sai cudamemcpy\n");
 
       cudaFree(dleft_image);
       cudaFree(dev_costs);
