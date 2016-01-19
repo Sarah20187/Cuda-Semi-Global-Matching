@@ -247,6 +247,8 @@ void iterate_direction_dirxneg(const int dirx, const int *left_image,
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
+
+
       for ( int j = 0; j < HEIGHT; j++ ) {
           for ( int i = WIDTH-1; i >= 0; i-- ) {
               if(i==WIDTH-1) {
@@ -273,9 +275,13 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-      for ( int j = 0; j < HEIGHT; j++ ){
+    int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+
+     
+
+     // for ( int j = 0; j < HEIGHT; j++ ){
           for ( int i = WIDTH-1; i >= 0; i-- ) {
-           // if(i>=0 && i <= WIDTH-1 && j< HEIGHT && j>=0) {
+            if(j>=0 && j < HEIGHT) {
               if(i==WIDTH-1) {
                   for ( int d = 0; d < disp_range; d++ ) {
                       ACCUMULATED_COSTS(WIDTH-1,j,d) += COSTS(WIDTH-1,j,d);
@@ -371,7 +377,7 @@ void iterate_direction( const int dirx, const int diry, const int *left_image,
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
-  //    iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
@@ -425,7 +431,7 @@ fprintf(stderr,"sai do kernel\n");
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
-   //   diterate_direction_dirxneg<<<grid, block>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      diterate_direction_dirxneg<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
