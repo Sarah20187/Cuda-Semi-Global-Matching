@@ -364,9 +364,11 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
  */
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = blockIdx.y * blockDim.y + threadIdx.y;
+  int d = blockIdx.z * blockDim.z + threadIdx.z;
 
   if(i<nx && j<ny){
-    for ( int d = 0; d < disp_range; d++ ) {
+    //for ( int d = 0; d < disp_range; d++ ) {
+     if(d>= 0 && d < disp_range) {
       int idx = (i)*disp_range+(j)*nx*disp_range+(d);
       im1[idx] += im2[idx];
     }
@@ -399,14 +401,44 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
     const int nx = w;
     const int ny = h;
 
-  int block_x = 32;
+  /*int block_x = 32;
   int block_y = 16; //32*16 = 512
 
   int grid_x = ceil((float)nx / block_x);
   int grid_y = ceil((float)ny / block_y);
 
   dim3 block(block_x,block_y);
-  dim3 grid(grid_x, grid_y);
+  dim3 grid(grid_x, grid_y);*/
+  int block_x, block_y, block_z;
+  if(disp_range <= 32 && disp_range > 20) { 
+    block_x = 4 ;
+    block_y = 4 ; 
+    block_z = disp_range; 
+  }
+  else if(disp_range < 20 && disp_range > 14){
+  block_x = 5 ;
+    block_y = 5 ; 
+    block_z = disp_range;
+    
+  }
+  else if(disp_range < 14){
+  block_x = 6 ;
+    block_y = 6 ; 
+    block_z = disp_range;
+    
+  }
+  else{
+  block_x = 1 ;
+    block_y = 1 ; 
+    block_z = disp_range; 
+
+}     
+  int grid_x = ceil((float)nx / block_x);
+  int grid_y = ceil((float)ny / block_y);
+  int grid_z = ceil((float)disp_range / block_z);
+
+  dim3 block(block_x,block_y,block_z);
+  dim3 grid(grid_x, grid_y, grid_z);
 
   int *daccumulated_costs , *ddir_accumulated_costs ;
   cudaMalloc((void **)&daccumulated_costs, nx*ny*disp_range*sizeof(int));
