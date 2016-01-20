@@ -665,7 +665,8 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
     block_y = 1 ; 
     block_z = disp_range; 
 
-}     
+  }   
+    
   int grid_x = ceil((float)nx / block_x);
   int grid_y = ceil((float)ny / block_y);
   int grid_z = ceil((float)disp_range / block_z);
