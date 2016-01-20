@@ -386,8 +386,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs,
                         const int nx, const int ny, const int disp_range )
 {
- fprintf(stderr,"entra dirc\n");
-
+ 
    
   int blockx_x = 1;
   int blockx_y = 16; 
@@ -402,8 +401,6 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
   dim3 blockx(blockx_x,blockx_y);
   dim3 gridx(gridx_x, gridx_y);
   dim3 gridy(gridy_x, gridy_y);
-  // dim3 gridx(1, 1);
-  // dim3 gridy(1, 1);
   dim3 blocky(blocky_x,blocky_y);
 
      //implement blocks with 512 ?
@@ -412,9 +409,9 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
       // Process every pixel along this edge
-fprintf(stderr,"entra no if\n");
+
      diterate_direction_dirxpos<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
-fprintf(stderr,"sai do kernel\n");
+
     }
     else if ( diry > 0 ) {
       // TOP MOST EDGE
@@ -644,7 +641,6 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   cudaMalloc((void **)&ddir_accumulated_costs, size);
   cudaMalloc((void **)&daccumulated_costs, size);
 
-  //not sure what to send
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_costs,costs,size,cudaMemcpyHostToDevice);
@@ -697,45 +693,39 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   determine_costs_k <<< grid1, block1 >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
 
 
-  cudaMemcpy(costs,dev_costs,size, cudaMemcpyDeviceToHost);
+  
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) {
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }
+  cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice);
+
+  cudaMemset(daccumulated_costs, 0, size);
 
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
-fprintf(stderr,"entra no 1º for\n");
+
       if(dirx==0 && diry==0) continue;
-      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
-      cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
+      cudaMemset(ddir_accumulated_costs, 0, size);
+      
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      //cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice);
+      
       dinplace_sum_views <<< grid2, block2 >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost);
+     
   }
   dirx=0;
   for(diry=-1; diry<2; diry++) {
-fprintf(stderr,"entra segundo for\n");
+
       if(dirx==0 && diry==0) continue;
-      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
-      cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
+      cudaMemset(ddir_accumulated_costs, 0, size);
+     
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      //cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);      
-      cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice);
+   
       dinplace_sum_views <<< grid2, block2 >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost);
+     
   }
 
+   cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
    free(costs);
-  free(dir_accumulated_costs);
+ // free(dir_accumulated_costs);
 
   create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
 
@@ -744,7 +734,7 @@ fprintf(stderr,"entra segundo for\n");
   cudaFree(left_image);
   cudaFree(right_image);
   cudaFree(ddir_accumulated_costs);
-//  cudaFree(daccumulated_costs);
+  cudaFree(daccumulated_costs);
   cudaFree(dev_costs);
 
 
