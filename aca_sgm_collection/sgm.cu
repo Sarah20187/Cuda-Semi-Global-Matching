@@ -627,9 +627,8 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int imageSize = nx * ny * sizeof(int);  //image size in bytes
   int size = nx * ny * disp_range * sizeof(int);
 
-  int *left_image;
-  int *right_image;
-  int *dev_costs;
+  int *left_image, *right_image, *dev_costs,accumulated_costs,ddir_accumulated_costs;
+
 
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   if (costs == NULL) {
