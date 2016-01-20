@@ -611,8 +611,17 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
 
 
 }
+__global__ void dcreate_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range)
+{
 
+  int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+  int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
+  if(i<nx && j<ny && j>=0 && i>=0){
+   disp_image[(i)+(j)*nx] = 4 * dfind_min_index( &ACCUMULATED_COSTS(i,j,0), disp_range);
+  }
+
+}
 
 // sgm code to run on the GPU
 /////////////////////////////////////////////////////////////////////////////////////////
