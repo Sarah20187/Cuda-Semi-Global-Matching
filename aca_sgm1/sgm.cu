@@ -362,13 +362,13 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 
 if(i<nx && j<ny){
 
-  //for ( int d = 0; d < disp_range; d++ ) {
+  
   if(d>=0 && d < disp_range) {
-      //COSTS(i,j,d)=255u;
+     
    if(i < d)
       COSTS(i,j,d) = 255u;
    else
-//      COSTS(i,j,d)= abs(LEFT_IMAGE(i,j) - RIGHT_IMAGE(i,j));
+
 
       COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
    }

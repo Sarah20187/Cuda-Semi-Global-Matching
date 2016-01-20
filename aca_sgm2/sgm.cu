@@ -390,7 +390,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs,
                         const int nx, const int ny, const int disp_range )
 {
- fprintf(stderr,"entra dirc\n");
+
 
    
   int blockx_x = 1;
@@ -416,9 +416,9 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
       // Process every pixel along this edge
-fprintf(stderr,"entra no if\n");
+
      diterate_direction_dirxpos<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
-fprintf(stderr,"sai do kernel\n");
+
     }
     else if ( diry > 0 ) {
       // TOP MOST EDGE
@@ -577,22 +577,22 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
-//  int d = blockIdx.z * blockDim.z + threadIdx.z;  // coord z
+  int d = blockIdx.z * blockDim.z + threadIdx.z;  // coord z
 
 if(i<nx && j<ny){
 
-  for ( int d = 0; d < disp_range; d++ ) {
-      //COSTS(i,j,d)=255u;
+  
+  if(d>=0 && d < disp_range) {
+     
    if(i < d)
       COSTS(i,j,d) = 255u;
    else
-//      COSTS(i,j,d)= abs(LEFT_IMAGE(i,j) - RIGHT_IMAGE(i,j));
+
 
       COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
    }
   }
 }
-
 
 
 
@@ -635,14 +635,36 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   cudaMemcpy(dev_costs,costs,size,cudaMemcpyHostToDevice);
   
 
-  int block_x = 32;
-  int block_y = 16; //32*16 = 512
+  int block_x, block_y, block_z;
+  if(disp_range <= 32 && disp_range > 20) { 
+    block_x = 4 ;
+    block_y = 4 ; 
+    block_z = disp_range; 
+  }
+  else if(disp_range < 20 && disp_range > 14){
+  block_x = 5 ;
+    block_y = 5 ; 
+    block_z = disp_range;
+    
+  }
+  else if(disp_range < 14){
+  block_x = 6 ;
+    block_y = 6 ; 
+    block_z = disp_range;
+    
+  }
+  else{
+  block_x = 1 ;
+    block_y = 1 ; 
+    block_z = disp_range; 
 
+}     
   int grid_x = ceil((float)nx / block_x);
   int grid_y = ceil((float)ny / block_y);
+  int grid_z = ceil((float)disp_range / block_z);
 
-  dim3 block(block_x,block_y);
-  dim3 grid(grid_x, grid_y);
+  dim3 block(block_x,block_y,block_z);
+  dim3 grid(grid_x, grid_y, grid_z);
 
 
   determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
