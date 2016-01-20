@@ -591,7 +591,26 @@ if(i<nx && j<ny){
 }
 
 
+__global__ void dinplace_sum_views(int * im1, const int * im2,
+                        const int nx, const int ny, const int disp_range )
+{
 
+  
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = blockIdx.y * blockDim.y + threadIdx.y;
+  int d = blockIdx.z * blockDim.z + threadIdx.z;
+
+  if(i<nx && j<ny){
+    //for ( int d = 0; d < disp_range; d++ ) {
+     if(d>= 0 && d < disp_range) {
+      int idx = (i)*disp_range+(j)*nx*disp_range+(d);
+      im1[idx] += im2[idx];
+    }
+  }
+
+
+
+}
 
 
 
@@ -666,7 +685,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
     block_z = disp_range; 
 
   }   
-    
+
   int grid_x = ceil((float)nx / block_x);
   int grid_y = ceil((float)ny / block_y);
   int grid_z = ceil((float)disp_range / block_z);
