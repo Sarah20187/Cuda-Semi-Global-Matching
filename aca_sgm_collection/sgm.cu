@@ -607,10 +607,21 @@ __global__ void dinplace_sum_views(int * im1, const int * im2,
       im1[idx] += im2[idx];
     }
   }
-
-
-
 }
+
+__device__ int dfind_min_index( const int *v, const int disp_range) 
+{
+    int min = 2147483647;
+    int minind = -1;
+    for (int d=0; d < disp_range; d++) {
+         if(v[d]<min) {
+              min = v[d];
+              minind = d;
+         }
+    }
+    return minind;
+}
+
 __global__ void dcreate_disparity_view(const int *accumulated_costs, int * disp_image, int nx, int ny, int disp_range)
 {
 
