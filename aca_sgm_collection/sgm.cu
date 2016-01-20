@@ -659,9 +659,17 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   dim3 block1(block1_x,block1_y);
   dim3 grid1(grid1_x, grid1_y);
+//////////////////////////////////////////////////7
+  int block3_x = 32;
+  int block3_y = 16; //32*16 = 512
 
+  int grid3_x = ceil((float)nx / block_x);
+  int grid3_y = ceil((float)ny / block_y);
 
+  dim3 block3(block3_x,block3_y);
+  dim3 grid3(grid3_x, grid3_y);
 
+////////////////////////////////////////////////////////////////////
   int block_x, block_y, block_z;
   if(disp_range <= 32 && disp_range > 20) { 
     block_x = 4 ;
