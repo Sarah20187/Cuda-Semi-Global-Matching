@@ -627,7 +627,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int imageSize = nx * ny * sizeof(int);  //image size in bytes
   int size = nx * ny * disp_range * sizeof(int);
 
-  int *left_image, *right_image, *dev_costs,*daccumulated_costs,*ddir_accumulated_costs;
+  int *left_image, *right_image, *dev_costs,*daccumulated_costs,*ddir_accumulated_costs, *disp_image;
 
 
   int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
@@ -643,11 +643,13 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   cudaMalloc((void **)&dev_costs, size);
   cudaMalloc((void **)&ddir_accumulated_costs, size);
   cudaMalloc((void **)&daccumulated_costs, size);
+  cudaMalloc((void **)&disp_image, imageSize); 
 
   //not sure what to send
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_costs,costs,size,cudaMemcpyHostToDevice);
+  cudaMemcpy(disp_image, h_dispImD, imageSize, cudaMemcpyHostToDevice);
 
   int block1_x = 32;
   int block1_y = 16; //32*16 = 512
@@ -734,10 +736,13 @@ fprintf(stderr,"entra segundo for\n");
       cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost);
   }
 
-   free(costs);
+  free(costs);
   free(dir_accumulated_costs);
 
-  create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
+  dcreate_disparity_view <<< grid, block >>> (daccumulated_costs,disp_image,nx,ny, disp_range);
+
+  
+  cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
 
   free(accumulated_costs);
 
