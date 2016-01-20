@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <float.h>
 #include <stdlib.h>
-//1
+
 #include <limits>
 #include <algorithm>
 
@@ -161,13 +161,14 @@ __global__ void diterate_direction_dirxpos(const int dirx, const int *left_image
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-   //int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+    //int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
      //for ( int j = 0; j < HEIGHT; j++ ){
-  	for ( int i = 0; i < WIDTH; i++ ){
+      if(j>=0 && j < HEIGHT) {
+    for ( int i = 0; i < WIDTH; i++ ){
 
-	if(j>=0 && j < HEIGHT) {
+  
    
         if(i==0) {
             for ( int d = 0; d < disp_range; d++ ) {
@@ -220,10 +221,11 @@ __global__ void diterate_direction_dirypos(const int diry, const int *left_image
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-      //for ( int i = 0; i < WIDTH; i++ ) {
-      if(i>=0 && i < WIDTH) {
+     // for ( int i = 0; i < WIDTH; i++ ) {
+  if(i >= 0 && i< WIDTH) {
           for ( int j = 0; j < HEIGHT; j++ ){
-          
+    
+          //if(i>=0 && i < WIDTH && j< HEIGHT && j>=0) {
               if(j==0) {
                   for ( int d = 0; d < disp_range; d++ ) {
                       ACCUMULATED_COSTS(i,0,d) += COSTS(i,0,d);
@@ -248,8 +250,6 @@ void iterate_direction_dirxneg(const int dirx, const int *left_image,
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-
-
       for ( int j = 0; j < HEIGHT; j++ ) {
           for ( int i = WIDTH-1; i >= 0; i-- ) {
               if(i==WIDTH-1) {
@@ -271,18 +271,15 @@ __global__ void diterate_direction_dirxneg(const int dirx, const int *left_image
                         const int nx, const int ny, const int disp_range )
 {
     //int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
-    //int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
+    int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
 
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-    int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
-
-     
-
-     // for ( int j = 0; j < HEIGHT; j++ ){
+      //for ( int j = 0; j < HEIGHT; j++ ){
+  if(j>= 0 && j<HEIGHT) {   
           for ( int i = WIDTH-1; i >= 0; i-- ) {
-            if(j>=0 && j < HEIGHT) {
+           // if(i>=0 && i <= WIDTH-1 && j< HEIGHT && j>=0) {
               if(i==WIDTH-1) {
                   for ( int d = 0; d < disp_range; d++ ) {
                       ACCUMULATED_COSTS(WIDTH-1,j,d) += COSTS(WIDTH-1,j,d);
@@ -328,12 +325,13 @@ __global__ void diterate_direction_diryneg(const int diry, const int *left_image
                         const int nx, const int ny, const int disp_range )
 {
 
-    //int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
     //int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
     const int WIDTH = nx;
     const int HEIGHT = ny;
 
-     for ( int i = 0; i < WIDTH; i++ ) {
+     //for ( int i = 0; i < WIDTH; i++ ) {
+       if(i>=0 && i< WIDTH) {
          for ( int j = HEIGHT-1; j >= 0; j-- ){
         //if(i>=0 && i < WIDTH && j<= HEIGHT-1 && j>=0) {
               if(j==HEIGHT-1) {
@@ -378,13 +376,13 @@ void iterate_direction( const int dirx, const int diry, const int *left_image,
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
-      iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+     iterate_direction_dirxneg(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the bottom left and bottom right pixel
-   //   iterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+      iterate_direction_diryneg(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
 }
 
@@ -396,31 +394,30 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
 
    
   int blockx_x = 1;
-  int blockx_y = ny; 
-  int blocky_x = nx;
+  int blockx_y = 16; 
+  int blocky_x = 16;
   int blocky_y = 1; 
 
-  int gridx_x = ceil((float)nx / blockx_x);
+  int gridx_x = 1;
   int gridx_y = ceil((float)ny / blockx_y);
   int gridy_x = ceil((float)nx / blocky_x);
-  int gridy_y = ceil((float)ny / blocky_y);
+  int gridy_y = 1;
 
   dim3 blockx(blockx_x,blockx_y);
-  //dim3 gridx(gridx_x, gridx_y);
-  dim3 gridx(1, 1);
-  dim3 gridy(1, 1);
+  dim3 gridx(gridx_x, gridx_y);
+  dim3 gridy(gridy_x, gridy_y);
+  // dim3 gridx(1, 1);
+  // dim3 gridy(1, 1);
   dim3 blocky(blocky_x,blocky_y);
-//  dim3 gridy(gridy_x, gridy_y);
 
-
-    //implement blocks with 512 ?
+     //implement blocks with 512 ?
 
     // Walk along the edges in a clockwise fashion
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
       // Process every pixel along this edge
 fprintf(stderr,"entra no if\n");
-      diterate_direction_dirxpos<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+     diterate_direction_dirxpos<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
 fprintf(stderr,"sai do kernel\n");
     }
     else if ( diry > 0 ) {
@@ -433,13 +430,13 @@ fprintf(stderr,"sai do kernel\n");
       // RIGHT MOST EDGE
       // Process every pixel along this edge only if diry ==
       // 0. Otherwise skip the top right most pixel
-      diterate_direction_dirxneg<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
+   diterate_direction_dirxneg<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
     else if ( diry < 0 ) {
       // BOTTOM MOST EDGE
       // Process every pixel along this edge only if dirx ==
       // 0. Otherwise skip the bottom left and bottom right pixel
-   //   diterate_direction_diryneg<<<grid, block>>>(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
+     diterate_direction_diryneg<<<gridy, blocky>>>(diry,left_image,costs,accumulated_costs, nx, ny, disp_range);
     }
 }
 
@@ -671,6 +668,7 @@ fprintf(stderr,"entra no 1º for\n");
       cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
+      
       inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
   dirx=0;
@@ -681,23 +679,24 @@ fprintf(stderr,"entra segundo for\n");
       cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
       cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
+      
+
       inplace_sum_views( accumulated_costs, dir_accumulated_costs, nx, ny, disp_range);
   }
 
-  fprintf(stderr,"entra frees\n");
   free(costs);
   free(dir_accumulated_costs);
 
   create_disparity_view( accumulated_costs, h_dispIm, nx, ny, disp_range );
 
   free(accumulated_costs);
-  fprintf(stderr,"entra cudaFrees\n");
+
   cudaFree(left_image);
   cudaFree(right_image);
   cudaFree(ddir_accumulated_costs);
 //  cudaFree(daccumulated_costs);
   cudaFree(dev_costs);
-  fprintf(stderr,"sai cudafrees\n");
+
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
