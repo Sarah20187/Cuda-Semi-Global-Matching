@@ -402,8 +402,6 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
   dim3 blockx(blockx_x,blockx_y);
   dim3 gridx(gridx_x, gridx_y);
   dim3 gridy(gridy_x, gridy_y);
-  // dim3 gridx(1, 1);
-  // dim3 gridy(1, 1);
   dim3 blocky(blocky_x,blocky_y);
 
      //implement blocks with 512 ?
@@ -650,26 +648,17 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int *left_image, *right_image, *dev_costs,*daccumulated_costs,*ddir_accumulated_costs, *disp_image;
 
 
-  int *costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (costs == NULL) {
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }
-
-
-  cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
-  cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
+  cudaMalloc((void **)&left_image, imageSize);  
+  cudaMalloc((void **)&right_image, imageSize);   
   cudaMalloc((void **)&dev_costs, size);
   cudaMalloc((void **)&ddir_accumulated_costs, size);
   cudaMalloc((void **)&daccumulated_costs, size);
   cudaMalloc((void **)&disp_image, imageSize); 
 
-  //not sure what to send
+
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_costs,costs,size,cudaMemcpyHostToDevice);
-  cudaMemcpy(disp_image, h_dispIm, imageSize, cudaMemcpyHostToDevice);
+
 
   int block1_x = 32;
   int block1_y = 16; //32*16 = 512
@@ -725,60 +714,46 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
 
   determine_costs_k <<< grid1, block1 >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
-
-
-  cudaMemcpy(costs,dev_costs,size, cudaMemcpyDeviceToHost);
-
-  int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
-  if (accumulated_costs == NULL || dir_accumulated_costs == NULL) {
-        fprintf(stderr, "sgm_cuda:"
-                " Failed memory allocation(s).\n");
-        exit(1);
-  }
+ 
+  cudaMemset(daccumulated_costs, 0, size);
 
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
 
       if(dirx==0 && diry==0) continue;
-      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
-      cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
+      cudaMemset(ddir_accumulated_costs, 0, size);
+      
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      //cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice);
+      
       dinplace_sum_views <<< grid2, block2 >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost);
+     
   }
   dirx=0;
   for(diry=-1; diry<2; diry++) {
 
       if(dirx==0 && diry==0) continue;
-      std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
-      cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
+      cudaMemset(ddir_accumulated_costs, 0, size);
+     
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      //cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size, cudaMemcpyDeviceToHost);      
-      cudaMemcpy(daccumulated_costs,accumulated_costs, size , cudaMemcpyHostToDevice);
+   
       dinplace_sum_views <<< grid2, block2 >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
-      cudaMemcpy(accumulated_costs, daccumulated_costs, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(dir_accumulated_costs, ddir_accumulated_costs, size , cudaMemcpyDeviceToHost);
+     
   }
 
-  free(costs);
-  free(dir_accumulated_costs);
-
+ 
   dcreate_disparity_view <<< grid3, block3 >>> (daccumulated_costs,disp_image,nx,ny, disp_range);
 
   
   cudaMemcpy(h_dispIm, disp_image, imageSize, cudaMemcpyDeviceToHost);
 
-  free(accumulated_costs);
+  
 
   cudaFree(left_image);
   cudaFree(right_image);
   cudaFree(ddir_accumulated_costs);
-//  cudaFree(daccumulated_costs);
+  cudaFree(daccumulated_costs);
   cudaFree(dev_costs);
+  cudaFree(disp_image);
 
 
 }
