@@ -386,7 +386,7 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
                         const int* costs, int *accumulated_costs,
                         const int nx, const int ny, const int disp_range )
 {
- fprintf(stderr,"entra dirc\n");
+ 
 
    
   int blockx_x = 1;
@@ -412,9 +412,9 @@ void diterate_direction( const int dirx, const int diry, const int *left_image,
     if ( dirx > 0 ) {
       // LEFT MOST EDGE
       // Process every pixel along this edge
-fprintf(stderr,"entra no if\n");
+
      diterate_direction_dirxpos<<<gridx, blockx>>>(dirx,left_image,costs,accumulated_costs, nx, ny, disp_range);
-fprintf(stderr,"sai do kernel\n");
+
     }
     else if ( diry > 0 ) {
       // TOP MOST EDGE
@@ -739,7 +739,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
-fprintf(stderr,"entra no 1º for\n");
+
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
@@ -752,7 +752,7 @@ fprintf(stderr,"entra no 1º for\n");
   }
   dirx=0;
   for(diry=-1; diry<2; diry++) {
-fprintf(stderr,"entra segundo for\n");
+
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
