@@ -663,8 +663,8 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int block3_x = 32;
   int block3_y = 16; //32*16 = 512
 
-  int grid3_x = ceil((float)nx / block_x);
-  int grid3_y = ceil((float)ny / block_y);
+  int grid3_x = ceil((float)nx / block3_x);
+  int grid3_y = ceil((float)ny / block3_y);
 
   dim3 block3(block3_x,block3_y);
   dim3 grid3(grid3_x, grid3_y);
@@ -747,7 +747,7 @@ fprintf(stderr,"entra segundo for\n");
   free(costs);
   free(dir_accumulated_costs);
 
-  dcreate_disparity_view <<< grid, block >>> (daccumulated_costs,disp_image,nx,ny, disp_range);
+  dcreate_disparity_view <<< grid3, block3 >>> (daccumulated_costs,disp_image,nx,ny, disp_range);
 
   
   cudaMemcpy(h_dispImD, disp_image, imageSize, cudaMemcpyDeviceToHost);
