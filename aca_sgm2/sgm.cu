@@ -608,7 +608,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   const int nx = w;
   const int ny = h;
 
-  int imageSize = nx * ny * sizeof(int);  //image size in bytes
+  int imageSize = nx * ny * sizeof(int);  
   int size = nx * ny * disp_range * sizeof(int);
 
   int *left_image;
@@ -624,12 +624,12 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   }
 
 
-  cudaMalloc((void **)&left_image, imageSize);  //alocar memoria
-  cudaMalloc((void **)&right_image, imageSize);   //alocar memoria para o out
+  cudaMalloc((void **)&left_image, imageSize);  
+  cudaMalloc((void **)&right_image, imageSize);   
   cudaMalloc((void **)&dev_costs, size);
   cudaMalloc((void **)&ddir_accumulated_costs, size);
 
-  //not sure what to send
+  
   cudaMemcpy(left_image,h_leftIm,imageSize, cudaMemcpyHostToDevice);
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_costs,costs,size,cudaMemcpyHostToDevice);
@@ -670,9 +670,6 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
 
 
- /* cudaMemcpy(costs,dev_costs,size, cudaMemcpyDeviceToHost); 
-  cudaMemcpy(dev_costs,costs,size, cudaMemcpyHostToDevice);*/
-
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   int *dir_accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
   if (accumulated_costs == NULL || dir_accumulated_costs == NULL) {
@@ -684,7 +681,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
 
   int dirx=0,diry=0;
   for(dirx=-1; dirx<2; dirx++) {
-fprintf(stderr,"entra no 1º for\n");
+
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);
@@ -695,7 +692,7 @@ fprintf(stderr,"entra no 1º for\n");
   }
   dirx=0;
   for(diry=-1; diry<2; diry++) {
-fprintf(stderr,"entra segundo for\n");
+
       if(dirx==0 && diry==0) continue;
       std::fill(dir_accumulated_costs, dir_accumulated_costs+nx*ny*disp_range, 0);
       cudaMemcpy(ddir_accumulated_costs,dir_accumulated_costs,size,cudaMemcpyHostToDevice);

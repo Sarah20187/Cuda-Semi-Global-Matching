@@ -571,16 +571,17 @@ __global__ void determine_costs_k(const int *left_image, const int *right_image,
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;  //coord x
   int j = blockIdx.y * blockDim.y + threadIdx.y;   //coord y
-//  int d = blockIdx.z * blockDim.z + threadIdx.z;  // coord z
+  int d = blockIdx.z * blockDim.z + threadIdx.z;  // coord z
 
 if(i<nx && j<ny){
 
-  for ( int d = 0; d < disp_range; d++ ) {
-      //COSTS(i,j,d)=255u;
+  
+  if(d>=0 && d < disp_range) {
+     
    if(i < d)
       COSTS(i,j,d) = 255u;
    else
-//      COSTS(i,j,d)= abs(LEFT_IMAGE(i,j) - RIGHT_IMAGE(i,j));
+
 
       COSTS(i,j,d) = abs( LEFT_IMAGE(i,j) - RIGHT_IMAGE(i-d,j) );
    }
@@ -645,17 +646,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   cudaMemcpy(right_image,h_rightIm,imageSize,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_costs,costs,size,cudaMemcpyHostToDevice);
 
-  int block1_x = 32;
-  int block1_y = 16; //32*16 = 512
-
-  int grid1_x = ceil((float)nx / block1_x);
-  int grid1_y = ceil((float)ny / block1_y);
-
-  dim3 block1(block1_x,block1_y);
-  dim3 grid1(grid1_x, grid1_y);
-
-
-
+ 
   int block_x, block_y, block_z;
   if(disp_range <= 32 && disp_range > 20) { 
     block_x = 4 ;
@@ -685,14 +676,11 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
   int grid_y = ceil((float)ny / block_y);
   int grid_z = ceil((float)disp_range / block_z);
 
-  dim3 block2(block_x,block_y,block_z);
-  dim3 grid2(grid_x, grid_y, grid_z);
+  dim3 block(block_x,block_y,block_z);
+  dim3 grid(grid_x, grid_y, grid_z);
 
 
-
-  determine_costs_k <<< grid1, block1 >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
-
-
+  determine_costs_k <<< grid, block >>> (left_image,right_image,dev_costs,disp_range,nx,ny);
   
 
   int *accumulated_costs = (int *) calloc(nx*ny*disp_range,sizeof(int));
@@ -708,7 +696,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
       
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
       
-      dinplace_sum_views <<< grid2, block2 >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
+      dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
      
   }
   dirx=0;
@@ -719,7 +707,7 @@ void sgmDevice( const int *h_leftIm, const int *h_rightIm,
      
       diterate_direction( dirx,diry, left_image, dev_costs, ddir_accumulated_costs, nx, ny, disp_range);
    
-      dinplace_sum_views <<< grid2, block2 >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
+      dinplace_sum_views <<< grid, block >>> (daccumulated_costs, ddir_accumulated_costs, nx, ny, disp_range);
      
   }
 
